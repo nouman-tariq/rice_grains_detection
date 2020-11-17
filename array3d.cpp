@@ -2,6 +2,7 @@
 using namespace std;
 
 // added the project to the git
+// synchronized with the ubuntu as well
 
 void update_array(int array[][2][3])
 {
