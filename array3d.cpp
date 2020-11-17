@@ -3,6 +3,7 @@ using namespace std;
 
 // added the project to the git
 // synchronized with the ubuntu as well
+// fonts have been changed as well, Alhamdu lilah almost done with preferences!
 
 void update_array(int array[][2][3])
 {
