@@ -1,6 +1,8 @@
 #include <iostream>
 using namespace std;
 
+// added the project to the git
+
 void update_array(int array[][2][3])
 {
     array[0][0][0] += 100;
