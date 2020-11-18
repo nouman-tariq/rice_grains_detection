@@ -52,7 +52,50 @@ int main()
     int num_sections = 1;
     int section_size = 0;
 
-    
-    
-    
+    int rowhdrptr = OBJHDRSIZE+1;
+    int sectionhdrptr = OBJHDRSIZE + ROWHDRSIZE + 1;
+
+    for (size_t row = 0; row < num_rows; row++)
+    {
+        int instartcol = row_ends[row][0];
+        int shift = row_ends[row][0] - left_position;
+        int num_cols = 1 + (row_ends[row][1] - row_ends[row][0]);
+
+        int idx = instartcol;
+        while (idx<(instartcol + num_cols))
+        {
+            uint16_t sectionpos = (idx - instartcol + shift + 1);
+            while ((idx<(instartcol+num_cols)) && (inimage[row][idx][4] != 0))
+            {
+                for (size_t i = data_ptr; i < data_ptr+2; i++)
+                {
+                    num_sections += 1;
+                    section_size = 0;
+                    sectionhdrptr = data_ptr;
+                    data_ptr = SECTIONHDRSIZE + sectionhdrptr;
+                    while (inimage[row][idx][4] == 0)
+                    {
+                        idx += 1;
+                    }
+                    
+                }
+                
+            }
+            
+        }
+        int row_hdr_array[2];
+        uint2array(ID, 2, row_hdr_array);
+        for (size_t i = 0; i < 2; i++)
+        {
+            outdata[rowhdrptr+i][0] = row_hdr_array[i];
+        }
+
+        rowhdrptr = data_ptr;
+        sectionhdrptr = ROWHDRSIZE + rowhdrptr;       
+        data_ptr = SECTIONHDRSIZE + sectionhdrptr;
+
+        num_sections = 1;
+        section_size = 0;
+    }
+       
 }
