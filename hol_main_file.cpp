@@ -1,8 +1,7 @@
-#include <opencv2/highgui.hpp>
+// #include <opencv2/highgui.hpp>
 #include <iostream>
-
 using namespace std;
-using namespace cv;
+// using namespace cv;
 
 void image2binary()
 {
