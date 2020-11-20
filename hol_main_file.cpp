@@ -1,53 +1,7 @@
-// #include <opencv2/highgui.hpp>
+#include <opencv2/highgui.hpp>
 #include <iostream>
 using namespace std;
-// using namespace cv;
-
-void image2binary()
-{
-	// converts the image to a bit stream!
-	// return type should be specified!
-}
-
-void label_window()
-{
-}
-
-void serialize_object()
-{
-}
-
-void calculate_ellipse()
-{
-}
-
-void deserialize_object()
-{
-}
-
-void check_connected()
-{
-}
-
-void separate_connected()
-{
-}
-
-void process_object()
-{
-}
-
-void get_scan(){
-
-}
-
-int RGB2HSV(){
-
-}
-
-int calcMask(){
-
-}
+using namespace cv;
 
 int main(int argc, char **argv)
 {
