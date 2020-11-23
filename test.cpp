@@ -4,6 +4,13 @@ using namespace std;
 
 int main()
 {
-    int array[3][2] = {0, 0, 0, 0, 1, 1};
-    cout<<sizeof(array)/sizeof(array[0])<<endl;
+    FILE * pf;
+    pf = fopen("beans_text1.txt", "wb");
+    cout<<"End"<<endl;
+
+    if (pf!=NULL)
+    {
+        fwrite(pf, sizeof(char), )
+    }
+  
 }
