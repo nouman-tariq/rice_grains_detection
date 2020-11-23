@@ -1,16 +1,18 @@
 #include <iostream>
-
+#include <opencv2/highgui.hpp>
 using namespace std;
+using namespace cv;
 
 int main()
 {
     FILE * pf;
     pf = fopen("beans_text1.txt", "wb");
-    cout<<"End"<<endl;
+    
+    Mat img = imread("backside1.jpg");
 
     if (pf!=NULL)
     {
-        fwrite(pf, sizeof(char), )
+        fwrite(img.data, sizeof(uint16_t), sizeof(img),pf);
     }
-  
+    fclose(pf);
 }
