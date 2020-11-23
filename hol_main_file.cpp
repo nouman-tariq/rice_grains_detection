@@ -5,12 +5,12 @@ using namespace cv;
 
 
 // GLOBALS
-int WINDOWMAP;
+uint16_t WINDOWMAP[1][1000][4];
 uint32_t OBJHDRSIZE;
 uint16_t ROWHDRSIZE;
 uint16_t SECTIONHDRSIZE;
 uint16_t STREAMVALID;
-int HSV_RANGES;
+float HSV_RANGES[][2] = {0.45, 0.66, 0.7, 1, 0.5, 1};
 
 
 struct Ellipse
@@ -38,14 +38,13 @@ int main(int argc, char **argv)
 	waitKey(0);
 	return 0;
 	*/
-
 	OBJHDRSIZE = 8;
 	ROWHDRSIZE = 2;
 	SECTIONHDRSIZE = 4;
 
 	uint16_t Connected_grains = 0;
-	uint16_t NUM_ROWS = 1257;
-	uint16_t NUM_COLS = 901;
+//	uint16_t NUM_ROWS = 1257;
+//	uint16_t NUM_COLS = 901;
 
 	Mat image;
 	image = imread("backside1.jpg", IMREAD_COLOR);
@@ -60,6 +59,26 @@ int main(int argc, char **argv)
 		STREAMVALID = 0;
 	}
 	
+	uint16_t rowcount = 1;
+	uint16_t windwidx = 1;
+	uint16_t label_index = 0;
+
+	for (size_t k = 0; k < channels; k++)
+	{
+		for (size_t j = 0; j < scan_width; j++)
+		{
+			WINDOWMAP[0][j][k] = 0;
+		}
+		
+	}
+	
+	
+
+
+
+
+
+
 
 }
 
