@@ -27,6 +27,10 @@ struct Ellipse
 };
 
 
+/* functions definitions
+for the time being, i will avoid calling these
+functions through the head
+*/
 
 int main(int argc, char **argv)
 {
