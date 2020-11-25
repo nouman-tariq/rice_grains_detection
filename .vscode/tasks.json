@@ -2,16 +2,16 @@
     "tasks": [
         {
             "type": "cppbuild",
-            "label": "C/C++: g++.exe build active file",
-            "command": "D:\\installed_softwares\\mingw\\mingw64\\bin\\g++.exe",
+            "label": "C/C++: g++ build active file",
+            "command": "/usr/bin/g++",
             "args": [
                 "-g",
                 "${file}",
                 "-o",
-                "${fileDirname}\\${fileBasenameNoExtension}.exe"
+                "${fileDirname}/${fileBasenameNoExtension}"
             ],
             "options": {
-                "cwd": "D:\\installed_softwares\\mingw\\mingw64\\bin"
+                "cwd": "/usr/bin"
             },
             "problemMatcher": [
                 "$gcc"
