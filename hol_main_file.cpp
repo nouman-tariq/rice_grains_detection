@@ -64,7 +64,7 @@ int main(int argc, char **argv)
 	}
 	
 	uint16_t rowcount = 1;
-	uint16_t windwidx = 1;
+	uint16_t wndwidx = 1;
 	uint16_t label_index = 0;
 
 	for (size_t k = 0; k < channels; k++)
@@ -76,8 +76,56 @@ int main(int argc, char **argv)
 		
 	}
 	
-	
+	// get_scan()
 
+	while(true)
+	{
+		if (WINDOWMAP)
+		{
+			/* how to check that the above array is empty? */
+			// get_scan();
+
+			if (STREAMVALID == 0)
+			{
+				cout<<"Stream ended .."<<endl;
+			}
+			else
+			{
+				wndwidx = 1;
+			}
+
+		}
+
+		for (size_t col = 0; col < scan_width; col++)
+		{
+			if (WINDOWMAP[wndwidx][col][4] == 1)
+			{
+				int east = col;
+				int burstpos = col;
+				label_index += 1;
+
+				while ((east<scan_width) && (WINDOWMAP[wndwidx][east+1][4] == 1))
+				{
+					east += 1;
+				}
+
+				// label_window()
+				// serialize_object()
+				// calculate_ellipse()
+
+
+				// deserialize_object();
+				// check_connected;
+
+				
+				
+			}
+			
+		}
+		
+		
+		break;
+	}
 
 
 
