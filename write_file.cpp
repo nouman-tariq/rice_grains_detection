@@ -9,10 +9,10 @@ int main()
     pf = fopen("beans_text1.txt", "wb");
     
     Mat img = imread("backside1.jpg");
-
+    
     if (pf!=NULL)
     {
-        fwrite(img.data, sizeof(uint16_t), sizeof(img), pf);
+        fwrite(img.data, sizeof(uint8_t), sizeof(img), pf);
     }
     fclose(pf);
 }
