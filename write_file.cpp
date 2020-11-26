@@ -12,7 +12,7 @@ int main()
 
     if (pf!=NULL)
     {
-        fwrite(img.data, sizeof(uint8_t), sizeof(img),pf);
+        fwrite(img.data, sizeof(uint16_t), sizeof(img), pf);
     }
     fclose(pf);
 }

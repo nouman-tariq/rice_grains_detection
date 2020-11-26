@@ -9,8 +9,8 @@ int main()
     lsize = ftell(pf);
     rewind(pf);
 
-    char *buffer;
-    buffer = (char *)malloc(sizeof(char) * lsize);
+    uint16_t *buffer;
+    buffer = (uint16_t *)malloc(sizeof(uint16_t) * lsize);
 
     size_t result;
     result = fread(buffer, 1, lsize, pf);
