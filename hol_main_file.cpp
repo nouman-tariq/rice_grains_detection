@@ -117,20 +117,29 @@ int main(int argc, char **argv)
 				// deserialize_object();
 				// check_connected;
 
-				
+				// separate_connected_grains();				
 				
 			}
 			
+			// process_object();
 		}
 		
+	for (size_t k = 0; k < channels; k++)
+	{
+		for (size_t j = 0; j < scan_width; j++)
+		{
+			WINDOWMAP[wndwidx][j][k] = 0;
+		}
 		
+	}
+	
+	int wdw_height = sizeof(WINDOWMAP);
+	if ((STREAMVALID == 0) && (wdw_height <= 1))
+	{
 		break;
 	}
-
-
-
-
-
+		
+	}
 
 }
 
