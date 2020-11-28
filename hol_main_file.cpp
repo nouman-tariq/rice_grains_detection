@@ -29,11 +29,10 @@ for the time being, i will avoid calling these
 functions through the head
 */
 
-bool calcMask(float *HSV[3], float HSV_RANGES[][2]);
+bool calcMask(float *HSV, float HSV_RANGES[][2]);
 
 int main(int argc, char **argv)
 {
-	/*
 	/*
 	// loading the image file
 	Mat image;
@@ -41,6 +40,11 @@ int main(int argc, char **argv)
 	imshow("backside of the grain", image);
 	waitKey(0);
 	return 0;
+	float *HSV = new float[3];
+	HSV[0] = 0.5924;
+	HSV[1] = 0.9697;
+	HSV[2] = 0.5176;
+
 	
 	OBJHDRSIZE = 8;
 	ROWHDRSIZE = 2;
@@ -143,14 +147,10 @@ int main(int argc, char **argv)
 
 	*/
 
-	float HSV[3] = {0.5924, 0.9697, 0.5176};
-
-	bool result;
-	result = calcMask(HSV, HSV_RANGES);
-	cout<<result<<endl;
+	// float *HSV[3] = {0.5924, 0.9697, 0.5176};
 }
 
-bool calcMask(float HSV[3], float ranges[][2])
+bool calcMask(float *HSV, float ranges[][2])
 {
 
 	float H, S, V, hmin, hmax, smin, smax, vmin, vmax;
