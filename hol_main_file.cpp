@@ -1,5 +1,6 @@
 // #include <opencv2/highgui.hpp>
 #include <iostream>
+#include <math.h>
 using namespace std;
 // using namespace cv;
 
@@ -12,16 +13,25 @@ uint16_t STREAMVALID;
 float HSV_RANGES[][2] = {0.45, 0.66, 0.7, 1, 0.5, 1};
 
 struct Ellipse
+	{
+		float x = 0;
+		float y = 0;
+		float theta = 0;
+		float w = 0;
+		float l = 0;
+		float x1 = 0;
+		float y1 = 0;
+		float x2 = 0;
+		float y2 = 0;
+	};
+struct moments
 {
-	float x = 0;
-	float y = 0;
-	float theta = 0;
-	float w = 0;
-	float l = 0;
-	float x1 = 0;
-	float y1 = 0;
-	float x2 = 0;
-	float y2 = 0;
+	float m00 = 2028;
+	float m10 = 1326873;
+	float m01 = 55961;
+	float m11 = 36582961;
+	float m02 = 1883041;
+	float m20 = 868487811;
 };
 
 /* functions definitions
@@ -30,6 +40,7 @@ functions through the head
 */
 
 bool calcMask(float *HSV, float HSV_RANGES[][2]);
+Ellipse calculate_ellipse();
 
 int main(int argc, char **argv)
 {
@@ -146,8 +157,7 @@ int main(int argc, char **argv)
 	}
 
 	*/
-
-	// float *HSV[3] = {0.5924, 0.9697, 0.5176};
+	Ellipse e = calculate_ellipse();
 }
 
 bool calcMask(float *HSV, float ranges[][2])
@@ -180,6 +190,30 @@ bool calcMask(float *HSV, float ranges[][2])
 
 	return BW;
 }
+Ellipse calculate_ellipse()
+{
+	moments M;
+	Ellipse E;
+	float a, b, c, d;
 
+	E.x = M.m10 / M.m00;
+	E.y = M.m01 / M.m00;
+
+	a = M.m20 / M.m00 - (pow(E.x, 2));
+	b = 2 * (M.m11 / M.m00 - ((E.x) * (E.y)));
+	c = M.m02 / M.m00 - (pow(E.y, 2));
+
+	E.theta = 1 / 2 * atan(b / (a - c)) + (a < c) * 3.14 / 2.0;
+	E.w = sqrt(8 * (a + c - sqrt((pow(b, 2)) + pow((a - c), 2)))) / 2.0;
+	E.l = sqrt(8 * (a + c + sqrt((pow(b, 2)) + pow((a - c), 2)))) / 2.0;
+
+	d = sqrt(pow(E.l, 2) - pow(E.w, 2));
+	E.x1 = E.x + d * cos(E.theta);
+	E.y1 = E.y + d * sin(E.theta);
+	E.x2 = E.x - d * cos(E.theta);
+	E.y2 = E.y - d * sin(E.theta);
+
+	return E;
+}
 // g++ test.cpp -o testoutput -std=c++11 `pkg-config --cflags --libs opencv`
 // ./testoutput
