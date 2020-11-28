@@ -1,6 +1,6 @@
 #include <iostream>
-
 using namespace std;
+
 
 int main()
 {
@@ -13,7 +13,7 @@ int main()
 
     // random initialization
     double ranges[3][2] = {{0.45, 0.66}, {0.7, 1}, {0.5, 1}};
-    double HSV[3] = {1, 1, 3};
+    double HSV[3] = {0.5924, 0.9697, 0.5176};
 
     double H, S, V, hmin, hmax, smin, smax, vmin, vmax;
     bool Hbinary, Sbinary, Vbinary, BW;

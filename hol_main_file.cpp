@@ -1,8 +1,7 @@
-#include <opencv2/highgui.hpp>
+// #include <opencv2/highgui.hpp>
 #include <iostream>
 using namespace std;
-using namespace cv;
-
+// using namespace cv;
 
 // GLOBALS
 uint16_t WINDOWMAP[1][1000][4];
@@ -12,28 +11,29 @@ uint16_t SECTIONHDRSIZE;
 uint16_t STREAMVALID;
 float HSV_RANGES[][2] = {0.45, 0.66, 0.7, 1, 0.5, 1};
 
-
 struct Ellipse
 {
-    float x = 0;
-    float y = 0;
-    float theta = 0;
-    float w = 0;
-    float l = 0;
-    float x1 = 0;
-    float y1 = 0;
-    float x2 = 0;
-    float y2 = 0;
+	float x = 0;
+	float y = 0;
+	float theta = 0;
+	float w = 0;
+	float l = 0;
+	float x1 = 0;
+	float y1 = 0;
+	float x2 = 0;
+	float y2 = 0;
 };
-
 
 /* functions definitions
 for the time being, i will avoid calling these
 functions through the head
 */
 
+bool calcMask(float *HSV[3], float HSV_RANGES[][2]);
+
 int main(int argc, char **argv)
 {
+	/*
 	/*
 	// loading the image file
 	Mat image;
@@ -41,7 +41,7 @@ int main(int argc, char **argv)
 	imshow("backside of the grain", image);
 	waitKey(0);
 	return 0;
-	*/
+	
 	OBJHDRSIZE = 8;
 	ROWHDRSIZE = 2;
 	SECTIONHDRSIZE = 4;
@@ -82,7 +82,7 @@ int main(int argc, char **argv)
 	{
 		if (WINDOWMAP)
 		{
-			/* how to check that the above array is empty? */
+			// how to check that the above array is empty? 
 			// get_scan();
 
 			if (STREAMVALID == 0)
@@ -138,9 +138,47 @@ int main(int argc, char **argv)
 	{
 		break;
 	}
-		
+
 	}
 
+	*/
+
+	float HSV[3] = {0.5924, 0.9697, 0.5176};
+
+	bool result;
+	result = calcMask(HSV, HSV_RANGES);
+	cout<<result<<endl;
+}
+
+bool calcMask(float HSV[3], float ranges[][2])
+{
+
+	float H, S, V, hmin, hmax, smin, smax, vmin, vmax;
+	bool Hbinary, Sbinary, Vbinary, BW;
+
+	H = HSV[0];
+	S = HSV[1];
+	V = HSV[2];
+
+	// Get thresholds for Hue.
+	hmin = ranges[0][0];
+	hmax = ranges[0][1];
+
+	// Get thresholds for Saturation
+	smin = ranges[1][0];
+	smax = ranges[1][1];
+
+	// Get thresholds for Value
+	vmin = ranges[2][0];
+	vmax = ranges[2][1];
+
+	// Create mask based on thresholds
+	Hbinary = (H >= hmin) & (H <= hmax);
+	Sbinary = (S >= smin) & (S <= smax);
+	Vbinary = (V >= vmin) & (V <= vmax);
+	BW = Hbinary & Sbinary & Vbinary;
+
+	return BW;
 }
 
 // g++ test.cpp -o testoutput -std=c++11 `pkg-config --cflags --libs opencv`
