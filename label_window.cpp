@@ -1,20 +1,3 @@
-/*
-        "label_window"
-GOALS:
-
-INPUTS:
-    sectionstart
-    row
-    col
-    instream
-    hsv_ranges
-OUTPUTS:
-    left_position
-    width
-    obj_edges
-    outmoments
-*/
-
 #include <iostream>
 #include <vector>
 using namespace std;
@@ -45,6 +28,7 @@ int main()
     }
 
     double height; //size of object_edges.
+    height = sizeof(object_edges);
 
     if (height < row)
     {
@@ -88,7 +72,7 @@ int main()
             // moments = update_moments(moments, row, m);
             WINDOWMAP[row][m][4] = 2;
 
-            if ((m + 1 > scan_width) || (WINDOWMAP[row][m + 1][4] != 1))
+            if (( (m + 1) > scan_width) || (WINDOWMAP[row][m + 1][4] != 1))
             {
                 data_valid = 0;
                 if (object_edges[row][2] < m)
