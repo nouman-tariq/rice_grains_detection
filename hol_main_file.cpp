@@ -1,8 +1,8 @@
-// #include <opencv2/highgui.hpp>
+#include <opencv2/highgui.hpp>
 #include <iostream>
 #include <math.h>
 using namespace std;
-// using namespace cv;
+using namespace cv;
 
 // GLOBALS
 uint16_t WINDOWMAP[1][1000][4];
@@ -11,7 +11,7 @@ uint16_t ROWHDRSIZE;
 uint16_t SECTIONHDRSIZE;
 uint16_t STREAMVALID;
 float HSV_RANGES[][2] = {0.45, 0.66, 0.7, 1, 0.5, 1};
-bool is_connected;
+bool is_connected = false;
 
 struct Ellipse
 {
@@ -47,77 +47,82 @@ void process_object(uint8_t serialized_object_data[][4000]);
 void label_window();
 void RGB2HSV();
 void serialize_object();
-void get_scan();
+void get_scan(Mat img, float array[][2]);
 void image_read();
 int uint2array(int id, int size, int array[]);
 
 int main(int argc, char **argv)
 {
-	/*
+
 	// loading the image file
-	Mat image;
-	image = imread("backside1.jpg", IMREAD_COLOR);
-	imshow("backside of the grain", image);
-	waitKey(0);
-	return 0;
+	Mat instream;
+	instream = imread("backside1.jpg", IMREAD_COLOR);
+	cout<<"Image loaded!"<<endl;
+	
 	float *HSV = new float[3];
 	HSV[0] = 0.5924;
 	HSV[1] = 0.9697;
 	HSV[2] = 0.5176;
 
-	
 	OBJHDRSIZE = 8;
 	ROWHDRSIZE = 2;
 	SECTIONHDRSIZE = 4;
 
 	uint16_t Connected_grains = 0;
-//	uint16_t NUM_ROWS = 1257;
-//	uint16_t NUM_COLS = 901;
-
-	Mat image;
-	image = imread("backside1.jpg", IMREAD_COLOR);
+	//	uint16_t NUM_ROWS = 1257;
+	//	uint16_t NUM_COLS = 901;
 
 	int rows, scan_width, channels;
-	rows = image.rows;	
-	scan_width = image.cols;
-	channels = image.channels();
+	rows = instream.rows;
+	scan_width = instream.cols;
+	channels = instream.channels();
+
+	cout<<"image rows = "<<rows<<endl;
+	cout<<"image cols = "<<scan_width<<endl;
+	cout<<"image channels = "<<channels<<endl;
+	
+
 
 	if (!rows)
 	{
 		STREAMVALID = 0;
 	}
-	
+
+
+
 	uint16_t rowcount = 1;
 	uint16_t wndwidx = 1;
 	uint16_t label_index = 0;
 
-	for (size_t k = 0; k < channels; k++)
+	for (size_t k = 0; k < channels + 1; k++)
 	{
-		for (size_t j = 0; j < scan_width; j++)
+		for (size_t j = 0; j < 1000; j++)
 		{
 			WINDOWMAP[0][j][k] = 0;
 		}
-		
 	}
-	
-	// get_scan()
 
-	while(true)
+	cout<<"Windowmap initialized to zeros"<<endl;
+	
+	
+	get_scan(instream, HSV_RANGES);
+
+/*
+	while (true)
 	{
 		if (WINDOWMAP)
 		{
-			// how to check that the above array is empty? 
+			// how to check that the above array is empty?
 			// get_scan();
 
 			if (STREAMVALID == 0)
 			{
-				cout<<"Stream ended .."<<endl;
+				cout << "Stream ended .." << endl;
 			}
 			else
 			{
 				wndwidx = 1;
 			}
-
 		}
 
 		for (size_t col = 0; col < scan_width; col++)
@@ -128,7 +133,7 @@ int main(int argc, char **argv)
 				int burstpos = col;
 				label_index += 1;
 
-				while ((east<scan_width) && (WINDOWMAP[wndwidx][east+1][4] == 1))
+				while ((east < scan_width) && (WINDOWMAP[wndwidx][east + 1][4] == 1))
 				{
 					east += 1;
 				}
@@ -137,35 +142,30 @@ int main(int argc, char **argv)
 				// serialize_object()
 				// calculate_ellipse()
 
-
 				// deserialize_object();
 				// check_connected;
 
-				// separate_connected_grains();				
-				
+				// separate_connected_grains();
 			}
-			
+
 			// process_object();
 		}
-		
-	for (size_t k = 0; k < channels; k++)
-	{
-		for (size_t j = 0; j < scan_width; j++)
+
+		for (size_t k = 0; k < channels; k++)
 		{
-			WINDOWMAP[wndwidx][j][k] = 0;
+			for (size_t j = 0; j < scan_width; j++)
+			{
+				WINDOWMAP[wndwidx][j][k] = 0;
+			}
 		}
-		
-	}
-	
-	int wdw_height = sizeof(WINDOWMAP);
-	if ((STREAMVALID == 0) && (wdw_height <= 1))
-	{
-		break;
-	}
 
+		int wdw_height = sizeof(WINDOWMAP);
+		if ((STREAMVALID == 0) && (wdw_height <= 1))
+		{
+			break;
+		}
 	}
-
-	*/
+*/
 }
 
 bool calcMask(float *HSV, float ranges[][2])
@@ -556,32 +556,51 @@ void serialize_object()
 		section_size = 0;
 	}
 }
-void get_scan()
+void get_scan(Mat img, float array[][2])
 {
-	/*
-	Mat img = imread("backside1.jpg");
-    Mat rgb_planes[3];
-    split(img, rgb_planes);
+	cout<<"inside get_scan()"<<endl;
 
-    int *ptr_imgidx, imgidx, HSV, bg;
-	//    imgidx = 0;
-	ptr_imgidx = &imgidx;
+/*
+	Mat rgb_planes[3];
+    split(img, rgb_planes);
+*/
+
+	static int imgidx = 0;
 	if (imgidx == 0)
 	{
-		*ptr_imgidx = 1;
+		imgidx = 1;
 	}
+	
+	cout<<"value of imgidx = "<<imgidx<<endl;
+/*
+    int HSV, bg;
+*/
+
 
 	int rows = img.rows;
 	int cols = img.cols;
-	int *RGBApixels[1][cols][4];
-	int streamvalid;
+	int RGBApixels[1][cols][4];
 
+	cout<<"Default values of RGBApixels"<<endl;
 
+	for (size_t k = 0; k < 4; k++)
+	{
+		for (size_t j = 0; j < cols; j++)
+		{
+			RGBApixels[0][j][k] = 0;
+		}
+		
+	}
+
+	cout<<RGBApixels[0][2][3]<<endl;
+	cout<<RGBApixels[0][88][2]<<endl;
+	cout<<RGBApixels[0][22][1]<<endl;
+/*
 	if (rows < imgidx)
 	{
-		//        imgidx = rows;
-		*RGBApixels[1][cols][4] = {};
-		streamvalid = 0;
+		//imgidx = rows;
+		RGBApixels[1][cols][4] = {};
+		STREAMVALID = 0;
 		imgidx = 0;
 	}
 
