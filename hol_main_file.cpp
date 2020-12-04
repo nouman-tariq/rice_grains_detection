@@ -53,12 +53,12 @@ int uint2array(int id, int size, int array[]);
 
 int main(int argc, char **argv)
 {
-
+/*
 	// loading the image file
 	Mat instream;
 	instream = imread("backside1.jpg", IMREAD_COLOR);
-	cout<<"Image loaded!"<<endl;
-	
+	cout << "Image loaded!" << endl;
+
 	float *HSV = new float[3];
 	HSV[0] = 0.5924;
 	HSV[1] = 0.9697;
@@ -77,18 +77,14 @@ int main(int argc, char **argv)
 	scan_width = instream.cols;
 	channels = instream.channels();
 
-	cout<<"image rows = "<<rows<<endl;
-	cout<<"image cols = "<<scan_width<<endl;
-	cout<<"image channels = "<<channels<<endl;
-	
-
+	cout << "image rows = " << rows << endl;
+	cout << "image cols = " << scan_width << endl;
+	cout << "image channels = " << channels << endl;
 
 	if (!rows)
 	{
 		STREAMVALID = 0;
 	}
-
-
 
 	uint16_t rowcount = 1;
 	uint16_t wndwidx = 1;
@@ -102,12 +98,18 @@ int main(int argc, char **argv)
 		}
 	}
 
-	cout<<"Windowmap initialized to zeros"<<endl;
-	
-	
-	get_scan(instream, HSV_RANGES);
+	cout << "Windowmap initialized to zeros" << endl;
 
-/*
+	get_scan(instream, HSV_RANGES);
+*/
+
+	Mat img;
+	img = imread("backside1.jpg", IMREAD_COLOR);
+	Mat planes[3];
+	split(img, planes);
+	
+
+	/*
 	while (true)
 	{
 		if (WINDOWMAP)
@@ -558,9 +560,9 @@ void serialize_object()
 }
 void get_scan(Mat img, float array[][2])
 {
-	cout<<"inside get_scan()"<<endl;
+	cout << "inside get_scan()" << endl;
 
-/*
+	/*
 	Mat rgb_planes[3];
     split(img, rgb_planes);
 */
@@ -570,53 +572,45 @@ void get_scan(Mat img, float array[][2])
 	{
 		imgidx = 1;
 	}
-	
-	cout<<"value of imgidx = "<<imgidx<<endl;
-/*
+
+	cout << "value of imgidx = " << imgidx << endl;
+	/*
     int HSV, bg;
 */
-
 
 	int rows = img.rows;
 	int cols = img.cols;
 	int RGBApixels[1][cols][4];
 
-	cout<<"Default values of RGBApixels"<<endl;
-
+	cout << "Default values of RGBApixels" << endl;
 	for (size_t k = 0; k < 4; k++)
 	{
 		for (size_t j = 0; j < cols; j++)
 		{
 			RGBApixels[0][j][k] = 0;
 		}
-		
 	}
 
-	cout<<RGBApixels[0][2][3]<<endl;
-	cout<<RGBApixels[0][88][2]<<endl;
-	cout<<RGBApixels[0][22][1]<<endl;
-/*
 	if (rows < imgidx)
 	{
-		//imgidx = rows;
-		RGBApixels[1][cols][4] = {};
 		STREAMVALID = 0;
 		imgidx = 0;
 	}
 
+	cout<<img.col(2).row(1)<<endl;
+/*
 	else
 	{
-		RGBApixels[1][cols][4] = {};
-		for (int col = 1; col <= cols; col++)
+		for (int col = 0; col < cols; col++)
 		{
-//			HSV = RGB2HSV();
-//			bg = calcMask();
+			//			HSV = RGB2HSV();
+			//			bg = calcMask();
 			if (bg == 0)
 			{
 				for (int i = 1; i <= 3; i++)
 				{
-					*RGBApixels[1][col][i] = 1; // image indexing left!
-					*RGBApixels[1][col][4] = 1;
+					RGBApixels[1][col][i] = 1; // image indexing left!
+					RGBApixels[1][col][4] = 1;
 				}
 			}
 		}
