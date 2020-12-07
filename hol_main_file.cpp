@@ -10,7 +10,7 @@ uint32_t OBJHDRSIZE;
 uint16_t ROWHDRSIZE;
 uint16_t SECTIONHDRSIZE;
 uint16_t STREAMVALID;
-float HSV_RANGES[][2] = {0.45, 0.66, 0.7, 1, 0.5, 1};
+double HSV_RANGES[][2] = {0.45, 0.66, 0.7, 1, 0.5, 1};
 bool is_connected = false;
 
 struct Ellipse
@@ -40,33 +40,37 @@ for the time being, i will avoid calling these
 functions through the head
 */
 
-bool calcMask(float *HSV, float HSV_RANGES[][2]);
+bool calcMask(double *HSV, double HSV_RANGES[][2]);
 Ellipse calculate_ellipse();
 double check_connected(Ellipse e, double base_value);
 void process_object(uint8_t serialized_object_data[][4000]);
 void label_window();
-void RGB2HSV();
+void RGB2HSV(double R, double G, double B, double *HSV);
 void serialize_object();
-void get_scan(Mat img, float array[][2]);
+void get_scan(Mat img, double array[][2], double RGBApixels[][1000][4]);
 void image_read();
 int uint2array(int id, int size, int array[]);
 
 int main(int argc, char **argv)
 {
-/*
 	// loading the image file
 	Mat instream;
 	instream = imread("backside1.jpg", IMREAD_COLOR);
 	cout << "Image loaded!" << endl;
 
-	float *HSV = new float[3];
-	HSV[0] = 0.5924;
-	HSV[1] = 0.9697;
-	HSV[2] = 0.5176;
-
 	OBJHDRSIZE = 8;
 	ROWHDRSIZE = 2;
 	SECTIONHDRSIZE = 4;
+
+	double RGBApixels[1][1000][4];
+	cout << "Default values of RGBApixels" << endl;
+	for (size_t k = 0; k < 4; k++)
+	{
+		for (size_t j = 0; j < 1000; j++)
+		{
+			RGBApixels[0][j][k] = 0;
+		}
+	}
 
 	uint16_t Connected_grains = 0;
 	//	uint16_t NUM_ROWS = 1257;
@@ -100,14 +104,8 @@ int main(int argc, char **argv)
 
 	cout << "Windowmap initialized to zeros" << endl;
 
-	get_scan(instream, HSV_RANGES);
-*/
+	get_scan(instream, HSV_RANGES, RGBApixels);
 
-	Mat img;
-	img = imread("backside1.jpg", IMREAD_COLOR);
-	Mat planes[3];
-	split(img, planes);
-	
 
 	/*
 	while (true)
@@ -170,10 +168,10 @@ int main(int argc, char **argv)
 */
 }
 
-bool calcMask(float *HSV, float ranges[][2])
+bool calcMask(double *HSV, double ranges[][2])
 {
 
-	float H, S, V, hmin, hmax, smin, smax, vmin, vmax;
+	double H, S, V, hmin, hmax, smin, smax, vmin, vmax;
 	bool Hbinary, Sbinary, Vbinary, BW;
 
 	H = HSV[0];
@@ -398,17 +396,13 @@ void label_window()
 		int width = (most_right - most_left) + 1;
 	}
 }
-void RGB2HSV()
+void RGB2HSV(double R, double G, double B, double *HSV)
 {
-	// input values between 0 and 255
-	double R, G, B, var_max, var_min, del_max, del_R, del_G, del_B;
-
-	// output H, S, V (float) values between 0 and 1
+	double var_max, var_min, del_max, del_R, del_G, del_B;
 	double H, S, V;
-
 	double var_R = R / 255.0;
-	double var_G = R / 255.0;
-	double var_B = R / 255.0;
+	double var_G = G / 255.0;
+	double var_B = B / 255.0;
 
 	// finding the maximum
 	if ((var_R >= var_G) && (var_R >= var_B))
@@ -459,11 +453,11 @@ void RGB2HSV()
 		}
 		else if (var_G == var_max)
 		{
-			H = (1 / 3) + del_R - del_B;
+			H = 0.3334 + del_R - del_B;
 		}
 		else if (var_B == var_max)
 		{
-			H = (2 / 3) + del_G - del_R;
+			H = 0.6667 + del_G - del_R;
 		}
 
 		if (H < 0)
@@ -475,6 +469,10 @@ void RGB2HSV()
 			H = H - 1;
 		}
 	}
+
+	HSV[0] = H;
+	HSV[1] = S;
+	HSV[2] = V;
 }
 void serialize_object()
 {
@@ -558,15 +556,10 @@ void serialize_object()
 		section_size = 0;
 	}
 }
-void get_scan(Mat img, float array[][2])
+void get_scan(Mat img, double array[][2], double RGBApixels[][1000][4])
 {
 	cout << "inside get_scan()" << endl;
-
-	/*
-	Mat rgb_planes[3];
-    split(img, rgb_planes);
-*/
-
+	double *HSV = new double[3];
 	static int imgidx = 0;
 	if (imgidx == 0)
 	{
@@ -574,50 +567,42 @@ void get_scan(Mat img, float array[][2])
 	}
 
 	cout << "value of imgidx = " << imgidx << endl;
-	/*
-    int HSV, bg;
-*/
-
 	int rows = img.rows;
 	int cols = img.cols;
-	int RGBApixels[1][cols][4];
 
-	cout << "Default values of RGBApixels" << endl;
-	for (size_t k = 0; k < 4; k++)
-	{
-		for (size_t j = 0; j < cols; j++)
-		{
-			RGBApixels[0][j][k] = 0;
-		}
-	}
+	Mat planes[3];
+	split(img, planes);
+	double R, G, B;
+	bool bg;
 
 	if (rows < imgidx)
 	{
 		STREAMVALID = 0;
 		imgidx = 0;
 	}
-
-	cout<<img.col(2).row(1)<<endl;
-/*
 	else
 	{
 		for (int col = 0; col < cols; col++)
 		{
-			//			HSV = RGB2HSV();
-			//			bg = calcMask();
+
+			R = planes[2].data[(imgidx - 1) * col];
+			G = planes[1].data[(imgidx - 1) * col];
+			B = planes[0].data[(imgidx - 1) * col];
+			RGB2HSV(R, G, B, HSV);
+
+			bg = calcMask(HSV, HSV_RANGES);
 			if (bg == 0)
 			{
-				for (int i = 1; i <= 3; i++)
-				{
-					RGBApixels[1][col][i] = 1; // image indexing left!
-					RGBApixels[1][col][4] = 1;
-				}
+
+				RGBApixels[0][col][0] = planes[2].data[(imgidx - 1) * col];
+				RGBApixels[0][col][1] = planes[1].data[(imgidx - 1) * col];
+				RGBApixels[0][col][2] = planes[0].data[(imgidx - 1) * col];
+				RGBApixels[0][col][3] = 1;
 			}
 		}
-		streamvalid = 1;
+		STREAMVALID = 1;
 		imgidx += 1;
 	}
-	*/
 }
 void image_read()
 {
