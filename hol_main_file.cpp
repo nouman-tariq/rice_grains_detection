@@ -5,7 +5,7 @@ using namespace std;
 using namespace cv;
 
 // GLOBALS
-uint16_t WINDOWMAP[1][1000][4];
+double WINDOWMAP[1][1000][4];
 uint32_t OBJHDRSIZE;
 uint16_t ROWHDRSIZE;
 uint16_t SECTIONHDRSIZE;
@@ -47,7 +47,7 @@ void process_object(uint8_t serialized_object_data[][4000]);
 void label_window();
 void RGB2HSV(double R, double G, double B, double *HSV);
 void serialize_object();
-void get_scan(Mat img, double array[][2], double RGBApixels[][1000][4]);
+void get_scan(Mat img, double array[][2], double WINDOWMAP[1][1000][4]);
 void image_read();
 int uint2array(int id, int size, int array[]);
 
@@ -61,16 +61,6 @@ int main(int argc, char **argv)
 	OBJHDRSIZE = 8;
 	ROWHDRSIZE = 2;
 	SECTIONHDRSIZE = 4;
-
-	double RGBApixels[1][1000][4];
-	cout << "Default values of RGBApixels" << endl;
-	for (size_t k = 0; k < 4; k++)
-	{
-		for (size_t j = 0; j < 1000; j++)
-		{
-			RGBApixels[0][j][k] = 0;
-		}
-	}
 
 	uint16_t Connected_grains = 0;
 	//	uint16_t NUM_ROWS = 1257;
@@ -104,10 +94,13 @@ int main(int argc, char **argv)
 
 	cout << "Windowmap initialized to zeros" << endl;
 
-	get_scan(instream, HSV_RANGES, RGBApixels);
+	get_scan(instream, HSV_RANGES, WINDOWMAP);
 
-
-	/*
+	// for (size_t i = 0; i < scan_width; i++)
+	// {
+	// 	cout<<WINDOWMAP[0][i][2];
+	// }
+	
 	while (true)
 	{
 		if (WINDOWMAP)
@@ -115,57 +108,57 @@ int main(int argc, char **argv)
 			// how to check that the above array is empty?
 			// get_scan();
 
-			if (STREAMVALID == 0)
-			{
-				cout << "Stream ended .." << endl;
-			}
-			else
-			{
-				wndwidx = 1;
-			}
-		}
+	// 		if (STREAMVALID == 0)
+	// 		{
+	// 			cout << "Stream ended .." << endl;
+	// 		}
+	// 		else
+	// 		{
+	// 			wndwidx = 1;
+	// 		}
+	// 	}
 
-		for (size_t col = 0; col < scan_width; col++)
-		{
-			if (WINDOWMAP[wndwidx][col][4] == 1)
-			{
-				int east = col;
-				int burstpos = col;
-				label_index += 1;
+	// 	for (size_t col = 0; col < scan_width; col++)
+	// 	{
+	// 		if (WINDOWMAP[wndwidx][col][4] == 1)
+	// 		{
+	// 			int east = col;
+	// 			int burstpos = col;
+	// 			label_index += 1;
 
-				while ((east < scan_width) && (WINDOWMAP[wndwidx][east + 1][4] == 1))
-				{
-					east += 1;
-				}
+	// 			while ((east < scan_width) && (WINDOWMAP[wndwidx][east + 1][4] == 1))
+	// 			{
+	// 				east += 1;
+	// 			}
 
-				// label_window()
-				// serialize_object()
-				// calculate_ellipse()
+	// 			// label_window()
+	// 			// serialize_object()
+	// 			// calculate_ellipse()
 
-				// deserialize_object();
-				// check_connected;
+	// 			// deserialize_object();
+	// 			// check_connected;
 
-				// separate_connected_grains();
-			}
+	// 			// separate_connected_grains();
+	// 		}
 
-			// process_object();
-		}
+	// 		// process_object();
+	// 	}
 
-		for (size_t k = 0; k < channels; k++)
-		{
-			for (size_t j = 0; j < scan_width; j++)
-			{
-				WINDOWMAP[wndwidx][j][k] = 0;
-			}
-		}
+	// 	for (size_t k = 0; k < channels; k++)
+	// 	{
+	// 		for (size_t j = 0; j < scan_width; j++)
+	// 		{
+	// 			WINDOWMAP[wndwidx][j][k] = 0;
+	// 		}
+	// 	}
 
-		int wdw_height = sizeof(WINDOWMAP);
-		if ((STREAMVALID == 0) && (wdw_height <= 1))
-		{
-			break;
-		}
-	}
-*/
+	// 	int wdw_height = sizeof(WINDOWMAP);
+	// 	if ((STREAMVALID == 0) && (wdw_height <= 1))
+	// 	{
+	// 		break;
+	// 	}
+	// }
+
 }
 
 bool calcMask(double *HSV, double ranges[][2])
@@ -196,6 +189,7 @@ bool calcMask(double *HSV, double ranges[][2])
 	Vbinary = (V >= vmin) & (V <= vmax);
 	BW = Hbinary & Sbinary & Vbinary;
 
+	// cout<<"value of BW = "<<BW<<endl;
 	return BW;
 }
 Ellipse calculate_ellipse()
@@ -556,7 +550,7 @@ void serialize_object()
 		section_size = 0;
 	}
 }
-void get_scan(Mat img, double array[][2], double RGBApixels[][1000][4])
+void get_scan(Mat img, double array[][2], double WINDOWMAP[1][1000][4])
 {
 	cout << "inside get_scan()" << endl;
 	double *HSV = new double[3];
@@ -566,9 +560,11 @@ void get_scan(Mat img, double array[][2], double RGBApixels[][1000][4])
 		imgidx = 1;
 	}
 
-	cout << "value of imgidx = " << imgidx << endl;
+	// cout << "value of imgidx = " << imgidx << endl;
 	int rows = img.rows;
 	int cols = img.cols;
+
+	
 
 	Mat planes[3];
 	split(img, planes);
@@ -585,19 +581,23 @@ void get_scan(Mat img, double array[][2], double RGBApixels[][1000][4])
 		for (int col = 0; col < cols; col++)
 		{
 
-			R = planes[2].data[(imgidx - 1) * col];
-			G = planes[1].data[(imgidx - 1) * col];
-			B = planes[0].data[(imgidx - 1) * col];
+			R = planes[2].data[(imgidx) * col];
+			G = planes[1].data[(imgidx) * col];
+			B = planes[0].data[(imgidx) * col];
+			
+			// cout<<"Value of G = "<<G<<endl;
+
 			RGB2HSV(R, G, B, HSV);
 
 			bg = calcMask(HSV, HSV_RANGES);
+
 			if (bg == 0)
 			{
-
-				RGBApixels[0][col][0] = planes[2].data[(imgidx - 1) * col];
-				RGBApixels[0][col][1] = planes[1].data[(imgidx - 1) * col];
-				RGBApixels[0][col][2] = planes[0].data[(imgidx - 1) * col];
-				RGBApixels[0][col][3] = 1;
+				cout<<col<<endl;
+				WINDOWMAP[0][col][0] = planes[2].data[(imgidx) * col];
+				WINDOWMAP[0][col][1] = planes[1].data[(imgidx) * col];
+				WINDOWMAP[0][col][2] = planes[0].data[(imgidx) * col];
+				WINDOWMAP[0][col][3] = 1;
 			}
 		}
 		STREAMVALID = 1;
