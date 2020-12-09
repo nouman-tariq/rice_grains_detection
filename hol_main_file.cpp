@@ -51,6 +51,15 @@ void get_scan(Mat img, double array[][2], double WINDOWMAP[1][1000][4]);
 void image_read();
 int uint2array(int id, int size, int array[]);
 
+
+
+
+
+
+
+
+
+
 int main(int argc, char **argv)
 {
 	// loading the image file
@@ -168,475 +177,483 @@ int main(int argc, char **argv)
 				// 	{
 				// 		break;
 				// 	}
-				// }
-				// }
 			}
 		}
-		bool calcMask(double *HSV, double ranges[][2])
+	}
+}
+
+
+
+
+
+
+
+
+bool calcMask(double *HSV, double ranges[][2])
+{
+
+	double H, S, V, hmin, hmax, smin, smax, vmin, vmax;
+	bool Hbinary, Sbinary, Vbinary, BW;
+
+	H = HSV[0];
+	S = HSV[1];
+	V = HSV[2];
+
+	// Get thresholds for Hue.
+	hmin = ranges[0][0];
+	hmax = ranges[0][1];
+
+	// Get thresholds for Saturation
+	smin = ranges[1][0];
+	smax = ranges[1][1];
+
+	// Get thresholds for Value
+	vmin = ranges[2][0];
+	vmax = ranges[2][1];
+
+	// Create mask based on thresholds
+	Hbinary = (H >= hmin) & (H <= hmax);
+	Sbinary = (S >= smin) & (S <= smax);
+	Vbinary = (V >= vmin) & (V <= vmax);
+	BW = Hbinary & Sbinary & Vbinary;
+
+	// cout<<"value of BW = "<<BW<<endl;
+	return BW;
+}
+Ellipse calculate_ellipse()
+{
+	moments M;
+	Ellipse E;
+	float a, b, c, d;
+
+	E.x = M.m10 / M.m00;
+	E.y = M.m01 / M.m00;
+
+	a = M.m20 / M.m00 - (pow(E.x, 2));
+	b = 2 * (M.m11 / M.m00 - ((E.x) * (E.y)));
+	c = M.m02 / M.m00 - (pow(E.y, 2));
+
+	E.theta = 1 / 2 * atan(b / (a - c)) + (a < c) * 3.14 / 2.0;
+	E.w = sqrt(8 * (a + c - sqrt((pow(b, 2)) + pow((a - c), 2)))) / 2.0;
+	E.l = sqrt(8 * (a + c + sqrt((pow(b, 2)) + pow((a - c), 2)))) / 2.0;
+
+	d = sqrt(pow(E.l, 2) - pow(E.w, 2));
+	E.x1 = E.x + d * cos(E.theta);
+	E.y1 = E.y + d * sin(E.theta);
+	E.x2 = E.x - d * cos(E.theta);
+	E.y2 = E.y - d * sin(E.theta);
+
+	return E;
+}
+double check_connected(Ellipse E, double base_size = 0.00)
+{
+	static int ave_cnt = 0, CMA_ave = 0;
+	int MIN_AVE_COUNT = 5;
+	int ave_value, ellipse_size;
+
+	if (!CMA_ave)
+	{
+		ave_cnt = 0;
+		CMA_ave = 0;
+	}
+
+	ellipse_size = E.l;
+
+	if (base_size == 0.00)
+	{
+		if (ave_cnt < MIN_AVE_COUNT)
 		{
-
-			double H, S, V, hmin, hmax, smin, smax, vmin, vmax;
-			bool Hbinary, Sbinary, Vbinary, BW;
-
-			H = HSV[0];
-			S = HSV[1];
-			V = HSV[2];
-
-			// Get thresholds for Hue.
-			hmin = ranges[0][0];
-			hmax = ranges[0][1];
-
-			// Get thresholds for Saturation
-			smin = ranges[1][0];
-			smax = ranges[1][1];
-
-			// Get thresholds for Value
-			vmin = ranges[2][0];
-			vmax = ranges[2][1];
-
-			// Create mask based on thresholds
-			Hbinary = (H >= hmin) & (H <= hmax);
-			Sbinary = (S >= smin) & (S <= smax);
-			Vbinary = (V >= vmin) & (V <= vmax);
-			BW = Hbinary & Sbinary & Vbinary;
-
-			// cout<<"value of BW = "<<BW<<endl;
-			return BW;
+			is_connected = false;
+			CMA_ave = CMA_ave + ((ellipse_size - CMA_ave) / (ave_cnt + 1));
+			ave_cnt++;
 		}
-		Ellipse calculate_ellipse()
+		else
 		{
-			moments M;
-			Ellipse E;
-			float a, b, c, d;
-
-			E.x = M.m10 / M.m00;
-			E.y = M.m01 / M.m00;
-
-			a = M.m20 / M.m00 - (pow(E.x, 2));
-			b = 2 * (M.m11 / M.m00 - ((E.x) * (E.y)));
-			c = M.m02 / M.m00 - (pow(E.y, 2));
-
-			E.theta = 1 / 2 * atan(b / (a - c)) + (a < c) * 3.14 / 2.0;
-			E.w = sqrt(8 * (a + c - sqrt((pow(b, 2)) + pow((a - c), 2)))) / 2.0;
-			E.l = sqrt(8 * (a + c + sqrt((pow(b, 2)) + pow((a - c), 2)))) / 2.0;
-
-			d = sqrt(pow(E.l, 2) - pow(E.w, 2));
-			E.x1 = E.x + d * cos(E.theta);
-			E.y1 = E.y + d * sin(E.theta);
-			E.x2 = E.x - d * cos(E.theta);
-			E.y2 = E.y - d * sin(E.theta);
-
-			return E;
-		}
-		double check_connected(Ellipse E, double base_size = 0.00)
-		{
-			static int ave_cnt = 0, CMA_ave = 0;
-			int MIN_AVE_COUNT = 5;
-			int ave_value, ellipse_size;
-
-			if (!CMA_ave)
+			if (ellipse_size >= (CMA_ave * 1.6))
 			{
-				ave_cnt = 0;
-				CMA_ave = 0;
-			}
-
-			ellipse_size = E.l;
-
-			if (base_size == 0.00)
-			{
-				if (ave_cnt < MIN_AVE_COUNT)
-				{
-					is_connected = false;
-					CMA_ave = CMA_ave + ((ellipse_size - CMA_ave) / (ave_cnt + 1));
-					ave_cnt++;
-				}
-				else
-				{
-					if (ellipse_size >= (CMA_ave * 1.6))
-					{
-						is_connected = true;
-					}
-					else
-					{
-						CMA_ave = CMA_ave + (ellipse_size - CMA_ave) / (ave_cnt + 1);
-						is_connected = false;
-						ave_cnt++;
-					}
-				}
-
-				ave_value = CMA_ave;
+				is_connected = true;
 			}
 			else
 			{
-				if (ellipse_size >= base_size * 1.6)
-				{
-					is_connected = true;
-				}
-				else
-				{
-					is_connected = false;
-				}
-				ave_value = base_size;
+				CMA_ave = CMA_ave + (ellipse_size - CMA_ave) / (ave_cnt + 1);
+				is_connected = false;
+				ave_cnt++;
 			}
-
-			return ave_value;
 		}
-		void process_object(uint8_t serialized_object_data[][3080])
+
+		ave_value = CMA_ave;
+	}
+	else
+	{
+		if (ellipse_size >= base_size * 1.6)
 		{
-			uint8_t tempdata;
-			// size of serialized_object_data should be sorted
-			// serialized_object_data should be a pointer as well!
-			tempdata = serialized_object_data[0][0] + 1;
+			is_connected = true;
 		}
-		void label_window()
+		else
 		{
-			static int moments, most_left, recursion_cnt;
-			int section_start, instream, hsv_ranges, most_right;
-			static int object_edges[][2] = {};
-			int row, col;
+			is_connected = false;
+		}
+		ave_value = base_size;
+	}
 
-			// GLOBALS
-			int STREAMVALID;
-			// WINDOWMAP
+	return ave_value;
+}
+void process_object(uint8_t serialized_object_data[][3080])
+{
+	uint8_t tempdata;
+	// size of serialized_object_data should be sorted
+	// serialized_object_data should be a pointer as well!
+	tempdata = serialized_object_data[0][0] + 1;
+}
+void label_window()
+{
+	static int moments, most_left, recursion_cnt;
+	int section_start, instream, hsv_ranges, most_right;
+	static int object_edges[][2] = {};
+	int row, col;
 
-			if (!recursion_cnt)
+	// GLOBALS
+	int STREAMVALID;
+	// WINDOWMAP
+
+	if (!recursion_cnt)
+	{
+		recursion_cnt = 1;
+		object_edges[1][1] = {section_start};
+		object_edges[1][2] = {col};
+		most_left = section_start;
+		most_right = col;
+		// moments = struct('m00', 0, 'm10', 0, 'm01', 0, 'm11', 0, 'm02', 0, 'm20', 0);
+	}
+	else
+	{
+		recursion_cnt += 1;
+	}
+
+	double height; //size of object_edges.
+	height = sizeof(object_edges);
+
+	if (height < row)
+	{
+		object_edges[row][1] = {col};
+		object_edges[row][2] = {col};
+	}
+
+	if (col > object_edges[row][2])
+	{
+		object_edges[row][2] = col;
+		most_right = col;
+	}
+
+	//while loop containing WINDOWMAP
+	double WINDOWMAP[][col][4] = {};
+	while ((col > 1) && (WINDOWMAP[row][col - 1][4] == 1))
+	{
+		col = col - 1;
+	}
+
+	int m = col;
+
+	if (col < object_edges[row][1])
+	{
+		object_edges[row][1] = {col};
+	}
+
+	// size of WINDOWMAP
+	int scan_width = sizeof(WINDOWMAP) / sizeof(WINDOWMAP[row][col - 1]);
+
+	if ((m <= scan_width) && (WINDOWMAP[row][m][4]) == 1)
+	{
+		if (m < most_left)
+		{
+			most_left = m;
+		}
+
+		int data_valid = 1;
+		while (data_valid == 1)
+		{
+			// moments = update_moments(moments, row, m);
+			WINDOWMAP[row][m][4] = 2;
+
+			if (((m + 1) > scan_width) || (WINDOWMAP[row][m + 1][4] != 1))
 			{
-				recursion_cnt = 1;
-				object_edges[1][1] = {section_start};
-				object_edges[1][2] = {col};
-				most_left = section_start;
-				most_right = col;
-				// moments = struct('m00', 0, 'm10', 0, 'm01', 0, 'm11', 0, 'm02', 0, 'm20', 0);
-			}
-			else
-			{
-				recursion_cnt += 1;
-			}
-
-			double height; //size of object_edges.
-			height = sizeof(object_edges);
-
-			if (height < row)
-			{
-				object_edges[row][1] = {col};
-				object_edges[row][2] = {col};
-			}
-
-			if (col > object_edges[row][2])
-			{
-				object_edges[row][2] = col;
-				most_right = col;
-			}
-
-			//while loop containing WINDOWMAP
-			double WINDOWMAP[][col][4] = {};
-			while ((col > 1) && (WINDOWMAP[row][col - 1][4] == 1))
-			{
-				col = col - 1;
-			}
-
-			int m = col;
-
-			if (col < object_edges[row][1])
-			{
-				object_edges[row][1] = {col};
-			}
-
-			// size of WINDOWMAP
-			int scan_width = sizeof(WINDOWMAP) / sizeof(WINDOWMAP[row][col - 1]);
-
-			if ((m <= scan_width) && (WINDOWMAP[row][m][4]) == 1)
-			{
-				if (m < most_left)
+				data_valid = 0;
+				if (object_edges[row][2] < m)
 				{
-					most_left = m;
+					object_edges[row][2] = m;
 				}
+			}
+			m = m + 1;
+		}
+	}
 
-				int data_valid = 1;
-				while (data_valid == 1)
+	while ((col < m) && (col > 0) && (col <= scan_width))
+	{
+		if ((row > 1) && (WINDOWMAP[row - 1][col][4] == 1))
+		{
+			// label_window(section_start, row-1, col, instream, hsv_ranges);
+		}
+
+		int wrows = sizeof(WINDOWMAP) / sizeof(WINDOWMAP[1]);
+		if ((wrows == row) && (STREAMVALID == 1))
+		{
+			// = get_scan(instream, hsv_ranges);
+		}
+
+		if (WINDOWMAP[row + 1][col][4] == 1)
+		{
+			// label_window(section_start, row-1, col, instream, hsv_ranges);
+		}
+
+		col = col + 1;
+	}
+
+	recursion_cnt -= 1;
+	if (recursion_cnt == 0)
+	{
+		recursion_cnt = {};
+		int obj_edges = object_edges[0][2];
+		int left_position = most_left;
+		int out_moments = moments;
+		int width = (most_right - most_left) + 1;
+	}
+}
+void RGB2HSV(double R, double G, double B, double *HSV)
+{
+	double var_max, var_min, del_max, del_R, del_G, del_B;
+	double H, S, V;
+	double var_R = R / 255.0;
+	double var_G = G / 255.0;
+	double var_B = B / 255.0;
+
+	// finding the maximum
+	if ((var_R >= var_G) && (var_R >= var_B))
+	{
+		var_max = var_R;
+	}
+	else if ((var_G >= var_R) && (var_G >= var_B))
+	{
+		var_max = var_G;
+	}
+	else if ((var_B >= var_R) && (var_G >= var_G))
+	{
+		var_max = var_B;
+	}
+
+	//finding the minimum
+	if ((var_R <= var_G) && (var_R <= var_B))
+	{
+		var_min = var_R;
+	}
+	else if ((var_G <= var_R) && (var_G <= var_B))
+	{
+		var_min = var_G;
+	}
+	else if ((var_B <= var_R) && (var_G <= var_G))
+	{
+		var_min = var_B;
+	}
+
+	del_max = var_max - var_min;
+
+	V = var_max;
+	if (del_max == 0)
+	{
+		H = 0;
+		S = 0;
+	}
+	else
+	{
+		S = del_max / var_max;
+		del_R = (((var_max - var_R) / 6) + (del_max / 2)) / del_max;
+		del_G = (((var_max - var_G) / 6) + (del_max / 2)) / del_max;
+		del_B = (((var_max - var_B) / 6) + (del_max / 2)) / del_max;
+
+		if (var_R == var_max)
+		{
+			H = del_B - del_G;
+		}
+		else if (var_G == var_max)
+		{
+			H = 0.3334 + del_R - del_B;
+		}
+		else if (var_B == var_max)
+		{
+			H = 0.6667 + del_G - del_R;
+		}
+
+		if (H < 0)
+		{
+			H = H + 1;
+		}
+		if (H > 1)
+		{
+			H = H - 1;
+		}
+	}
+
+	HSV[0] = H;
+	HSV[1] = S;
+	HSV[2] = V;
+}
+void serialize_object()
+{
+	double inimage[][901][4] = {};
+	double row_ends[][2] = {};
+	double left_position, width;
+
+	uint32_t ID = 0;
+	double data_ptr = OBJHDRSIZE + ROWHDRSIZE + SECTIONHDRSIZE + 1;
+
+	double num_rows = sizeof(row_ends) / sizeof(row_ends[0]);
+	int out_size = (num_rows * width) + (num_rows * 20);
+	int outdata[][out_size] = {};
+
+	// need of initializing outdata to zero?
+
+	int hdr_id[4];
+	uint2array(ID, 4, hdr_id);
+	for (size_t i = 0; i < 4; i++)
+	{
+		outdata[i][0] = hdr_id[i];
+	}
+
+	int hdr_num_rows[2];
+	uint2array(num_rows, 2, hdr_num_rows);
+	for (size_t i = 0; i < 2; i++)
+	{
+		outdata[i + 4][0] = hdr_num_rows[i];
+	}
+
+	int hdr_width[2];
+	uint2array(width, 2, hdr_width);
+	for (size_t i = 0; i < 2; i++)
+	{
+		outdata[i + 6][0] = hdr_width[i];
+	}
+
+	int num_sections = 1;
+	int section_size = 0;
+
+	int rowhdrptr = OBJHDRSIZE + 1;
+	int sectionhdrptr = OBJHDRSIZE + ROWHDRSIZE + 1;
+
+	for (size_t row = 0; row < num_rows; row++)
+	{
+		int instartcol = row_ends[row][0];
+		int shift = row_ends[row][0] - left_position;
+		int num_cols = 1 + (row_ends[row][1] - row_ends[row][0]);
+
+		int idx = instartcol;
+		while (idx < (instartcol + num_cols))
+		{
+			uint16_t sectionpos = (idx - instartcol + shift + 1);
+			while ((idx < (instartcol + num_cols)) && (inimage[row][idx][4] != 0))
+			{
+				for (size_t i = data_ptr; i < data_ptr + 2; i++)
 				{
-					// moments = update_moments(moments, row, m);
-					WINDOWMAP[row][m][4] = 2;
-
-					if (((m + 1) > scan_width) || (WINDOWMAP[row][m + 1][4] != 1))
+					num_sections += 1;
+					section_size = 0;
+					sectionhdrptr = data_ptr;
+					data_ptr = SECTIONHDRSIZE + sectionhdrptr;
+					while (inimage[row][idx][4] == 0)
 					{
-						data_valid = 0;
-						if (object_edges[row][2] < m)
-						{
-							object_edges[row][2] = m;
-						}
-					}
-					m = m + 1;
-				}
-			}
-
-			while ((col < m) && (col > 0) && (col <= scan_width))
-			{
-				if ((row > 1) && (WINDOWMAP[row - 1][col][4] == 1))
-				{
-					// label_window(section_start, row-1, col, instream, hsv_ranges);
-				}
-
-				int wrows = sizeof(WINDOWMAP) / sizeof(WINDOWMAP[1]);
-				if ((wrows == row) && (STREAMVALID == 1))
-				{
-					// = get_scan(instream, hsv_ranges);
-				}
-
-				if (WINDOWMAP[row + 1][col][4] == 1)
-				{
-					// label_window(section_start, row-1, col, instream, hsv_ranges);
-				}
-
-				col = col + 1;
-			}
-
-			recursion_cnt -= 1;
-			if (recursion_cnt == 0)
-			{
-				recursion_cnt = {};
-				int obj_edges = object_edges[0][2];
-				int left_position = most_left;
-				int out_moments = moments;
-				int width = (most_right - most_left) + 1;
-			}
-		}
-		void RGB2HSV(double R, double G, double B, double *HSV)
-		{
-			double var_max, var_min, del_max, del_R, del_G, del_B;
-			double H, S, V;
-			double var_R = R / 255.0;
-			double var_G = G / 255.0;
-			double var_B = B / 255.0;
-
-			// finding the maximum
-			if ((var_R >= var_G) && (var_R >= var_B))
-			{
-				var_max = var_R;
-			}
-			else if ((var_G >= var_R) && (var_G >= var_B))
-			{
-				var_max = var_G;
-			}
-			else if ((var_B >= var_R) && (var_G >= var_G))
-			{
-				var_max = var_B;
-			}
-
-			//finding the minimum
-			if ((var_R <= var_G) && (var_R <= var_B))
-			{
-				var_min = var_R;
-			}
-			else if ((var_G <= var_R) && (var_G <= var_B))
-			{
-				var_min = var_G;
-			}
-			else if ((var_B <= var_R) && (var_G <= var_G))
-			{
-				var_min = var_B;
-			}
-
-			del_max = var_max - var_min;
-
-			V = var_max;
-			if (del_max == 0)
-			{
-				H = 0;
-				S = 0;
-			}
-			else
-			{
-				S = del_max / var_max;
-				del_R = (((var_max - var_R) / 6) + (del_max / 2)) / del_max;
-				del_G = (((var_max - var_G) / 6) + (del_max / 2)) / del_max;
-				del_B = (((var_max - var_B) / 6) + (del_max / 2)) / del_max;
-
-				if (var_R == var_max)
-				{
-					H = del_B - del_G;
-				}
-				else if (var_G == var_max)
-				{
-					H = 0.3334 + del_R - del_B;
-				}
-				else if (var_B == var_max)
-				{
-					H = 0.6667 + del_G - del_R;
-				}
-
-				if (H < 0)
-				{
-					H = H + 1;
-				}
-				if (H > 1)
-				{
-					H = H - 1;
-				}
-			}
-
-			HSV[0] = H;
-			HSV[1] = S;
-			HSV[2] = V;
-		}
-		void serialize_object()
-		{
-			double inimage[][901][4] = {};
-			double row_ends[][2] = {};
-			double left_position, width;
-
-			uint32_t ID = 0;
-			double data_ptr = OBJHDRSIZE + ROWHDRSIZE + SECTIONHDRSIZE + 1;
-
-			double num_rows = sizeof(row_ends) / sizeof(row_ends[0]);
-			int out_size = (num_rows * width) + (num_rows * 20);
-			int outdata[][out_size] = {};
-
-			// need of initializing outdata to zero?
-
-			int hdr_id[4];
-			uint2array(ID, 4, hdr_id);
-			for (size_t i = 0; i < 4; i++)
-			{
-				outdata[i][0] = hdr_id[i];
-			}
-
-			int hdr_num_rows[2];
-			uint2array(num_rows, 2, hdr_num_rows);
-			for (size_t i = 0; i < 2; i++)
-			{
-				outdata[i + 4][0] = hdr_num_rows[i];
-			}
-
-			int hdr_width[2];
-			uint2array(width, 2, hdr_width);
-			for (size_t i = 0; i < 2; i++)
-			{
-				outdata[i + 6][0] = hdr_width[i];
-			}
-
-			int num_sections = 1;
-			int section_size = 0;
-
-			int rowhdrptr = OBJHDRSIZE + 1;
-			int sectionhdrptr = OBJHDRSIZE + ROWHDRSIZE + 1;
-
-			for (size_t row = 0; row < num_rows; row++)
-			{
-				int instartcol = row_ends[row][0];
-				int shift = row_ends[row][0] - left_position;
-				int num_cols = 1 + (row_ends[row][1] - row_ends[row][0]);
-
-				int idx = instartcol;
-				while (idx < (instartcol + num_cols))
-				{
-					uint16_t sectionpos = (idx - instartcol + shift + 1);
-					while ((idx < (instartcol + num_cols)) && (inimage[row][idx][4] != 0))
-					{
-						for (size_t i = data_ptr; i < data_ptr + 2; i++)
-						{
-							num_sections += 1;
-							section_size = 0;
-							sectionhdrptr = data_ptr;
-							data_ptr = SECTIONHDRSIZE + sectionhdrptr;
-							while (inimage[row][idx][4] == 0)
-							{
-								idx += 1;
-							}
-						}
-					}
-				}
-				int row_hdr_array[2];
-				uint2array(ID, 2, row_hdr_array);
-				for (size_t i = 0; i < 2; i++)
-				{
-					outdata[rowhdrptr + i][0] = row_hdr_array[i];
-				}
-
-				rowhdrptr = data_ptr;
-				sectionhdrptr = ROWHDRSIZE + rowhdrptr;
-				data_ptr = SECTIONHDRSIZE + sectionhdrptr;
-
-				num_sections = 1;
-				section_size = 0;
-			}
-		}
-		void get_scan(Mat img, double array[][2], double WINDOWMAP[1][1000][4])
-		{
-			cout << "inside get_scan()" << endl;
-			double *HSV = new double[3];
-			static int imgidx = 0;
-			if (imgidx == 0)
-			{
-				imgidx = 1;
-			}
-
-			// cout << "value of imgidx = " << imgidx << endl;
-			int rows = img.rows;
-			int cols = img.cols;
-
-			Mat planes[3];
-			split(img, planes);
-			double R, G, B;
-			bool bg;
-
-			if (rows < imgidx)
-			{
-				STREAMVALID = 0;
-				imgidx = 0;
-			}
-			else
-			{
-				for (int col = 0; col < cols; col++)
-				{
-
-					R = planes[2].data[(imgidx)*col];
-					G = planes[1].data[(imgidx)*col];
-					B = planes[0].data[(imgidx)*col];
-
-					// cout<<"Value of G = "<<G<<endl;
-
-					RGB2HSV(R, G, B, HSV);
-
-					bg = calcMask(HSV, HSV_RANGES);
-
-					if (bg == 0)
-					{
-						cout << col << endl;
-						WINDOWMAP[0][col][0] = planes[2].data[(imgidx)*col];
-						WINDOWMAP[0][col][1] = planes[1].data[(imgidx)*col];
-						WINDOWMAP[0][col][2] = planes[0].data[(imgidx)*col];
-						WINDOWMAP[0][col][3] = 1;
+						idx += 1;
 					}
 				}
-				STREAMVALID = 1;
-				imgidx += 1;
 			}
 		}
-		void image_read()
+		int row_hdr_array[2];
+		uint2array(ID, 2, row_hdr_array);
+		for (size_t i = 0; i < 2; i++)
 		{
-			FILE *pf = fopen("beans_text1.txt", "rb");
-			long lsize;
-			fseek(pf, 0, SEEK_END);
-			lsize = ftell(pf);
-			rewind(pf);
-			cout << lsize << endl;
-
-			uint8_t *buffer;
-			buffer = (uint8_t *)malloc(sizeof(uint8_t) * lsize);
-
-			size_t result;
-			result = fread(buffer, 1, lsize, pf);
-			fclose(pf);
-
-			int num_rows = 309;
-			int num_cols = 116;
-		}
-		int uint2array(int id, int size, int array[])
-		{
-			array[size] = {};
-			// need to make this function
+			outdata[rowhdrptr + i][0] = row_hdr_array[i];
 		}
 
-	// g++ test.cpp -o testoutput -std=c++11 `pkg-config --cflags --libs opencv`
-	// ./testoutput
+		rowhdrptr = data_ptr;
+		sectionhdrptr = ROWHDRSIZE + rowhdrptr;
+		data_ptr = SECTIONHDRSIZE + sectionhdrptr;
+
+		num_sections = 1;
+		section_size = 0;
+	}
+}
+void get_scan(Mat img, double array[][2], double WINDOWMAP[1][1000][4])
+{
+	cout << "inside get_scan()" << endl;
+	double *HSV = new double[3];
+	static int imgidx = 0;
+	if (imgidx == 0)
+	{
+		imgidx = 1;
+	}
+
+	// cout << "value of imgidx = " << imgidx << endl;
+	int rows = img.rows;
+	int cols = img.cols;
+
+	Mat planes[3];
+	split(img, planes);
+	double R, G, B;
+	bool bg;
+
+	if (rows < imgidx)
+	{
+		STREAMVALID = 0;
+		imgidx = 0;
+	}
+	else
+	{
+		for (int col = 0; col < cols; col++)
+		{
+
+			R = planes[2].data[(imgidx)*col];
+			G = planes[1].data[(imgidx)*col];
+			B = planes[0].data[(imgidx)*col];
+
+			// cout<<"Value of G = "<<G<<endl;
+
+			RGB2HSV(R, G, B, HSV);
+
+			bg = calcMask(HSV, HSV_RANGES);
+
+			if (bg == 0)
+			{
+				cout << col << endl;
+				WINDOWMAP[0][col][0] = planes[2].data[(imgidx)*col];
+				WINDOWMAP[0][col][1] = planes[1].data[(imgidx)*col];
+				WINDOWMAP[0][col][2] = planes[0].data[(imgidx)*col];
+				WINDOWMAP[0][col][3] = 1;
+			}
+		}
+		STREAMVALID = 1;
+		imgidx += 1;
+	}
+}
+void image_read()
+{
+	FILE *pf = fopen("beans_text1.txt", "rb");
+	long lsize;
+	fseek(pf, 0, SEEK_END);
+	lsize = ftell(pf);
+	rewind(pf);
+	cout << lsize << endl;
+
+	uint8_t *buffer;
+	buffer = (uint8_t *)malloc(sizeof(uint8_t) * lsize);
+
+	size_t result;
+	result = fread(buffer, 1, lsize, pf);
+	fclose(pf);
+
+	int num_rows = 309;
+	int num_cols = 116;
+}
+int uint2array(int id, int size, int array[])
+{
+	array[size] = {};
+	// need to make this function
+}
+
+// g++ test.cpp -o testoutput -std=c++11 `pkg-config --cflags --libs opencv`
+// ./testoutput
