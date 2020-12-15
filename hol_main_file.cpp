@@ -51,21 +51,10 @@ void get_scan(Mat img, double array[][2], double WINDOWMAP[1][1000][4]);
 void image_read();
 int uint2array(int id, int size, int array[]);
 
-
-
-
-
-
-
-
-
-
 int main(int argc, char **argv)
 {
-	// loading the image file
 	Mat instream;
 	instream = imread("backside1.jpg", IMREAD_COLOR);
-	cout << "Image loaded!" << endl;
 
 	OBJHDRSIZE = 8;
 	ROWHDRSIZE = 2;
@@ -80,9 +69,6 @@ int main(int argc, char **argv)
 	scan_width = instream.cols;
 	channels = instream.channels();
 
-	cout << "image rows = " << rows << endl;
-	cout << "image cols = " << scan_width << endl;
-	cout << "image channels = " << channels << endl;
 
 	if (!rows)
 	{
@@ -101,33 +87,16 @@ int main(int argc, char **argv)
 		}
 	}
 
-	cout << "Windowmap initialized to zeros" << endl;
-
 	get_scan(instream, HSV_RANGES, WINDOWMAP);
 
-	bool empty_wmap = true;
-	for (size_t i = 0; i < 4; i++)
-	{
-		for (size_t j = 0; j < scan_width; j++)
-		{
-			if (WINDOWMAP[0][j][i] != 0)
-			{
-				empty_wmap = false;
-				break;
-			}
-		}
+	bool isempty = false;	int itr = 0; //temporary
 
-		if (!empty_wmap)
-		{
-			break;
-		}
-	}
-	cout << empty_wmap << endl;
-
-	while (true)
+	while (itr<1)
 	{
-		if (empty_wmap)
+
+		if (isempty)
 		{
+			cout<<"inside 1st if loop- isempty = true!"<<endl;
 			get_scan(instream, HSV_RANGES, WINDOWMAP);
 			if (STREAMVALID == 0)
 			{
@@ -135,9 +104,10 @@ int main(int argc, char **argv)
 			}
 			else
 			{
-				wndwidx = 1;
+				wndwidx = 0;
 			}
 		}
+
 		for (size_t col = 0; col < scan_width; col++)
 		{
 			if (WINDOWMAP[wndwidx][col][4] == 1)
@@ -159,35 +129,28 @@ int main(int argc, char **argv)
 				// 			// check_connected;
 
 				// 			// separate_connected_grains();
-				// 		}
-
-				// 		// process_object();
-				// 	}
-
-				// 	for (size_t k = 0; k < channels; k++)
-				// 	{
-				// 		for (size_t j = 0; j < scan_width; j++)
-				// 		{
-				// 			WINDOWMAP[wndwidx][j][k] = 0;
-				// 		}
-				// 	}
-
-				// 	int wdw_height = sizeof(WINDOWMAP);
-				// 	if ((STREAMVALID == 0) && (wdw_height <= 1))
-				// 	{
-				// 		break;
-				// 	}
 			}
+
+			// 		// process_object();
+			
 		}
+		itr++; isempty = true; // temporary
+		// for (size_t k = 0; k < channels; k++)
+		// {
+		// 	for (size_t j = 0; j < scan_width; j++)
+		// 	{
+		// 		WINDOWMAP[wndwidx][j][k] = 0;
+		// 	}
+		// }
+
+		// int wdw_height = sizeof(WINDOWMAP) / (sizeof(WINDOWMAP[1]));
+		// if ((STREAMVALID == 0) && (wdw_height <= 1))
+		// {
+		// 	break;
+		// }
+		// rowcount++;
 	}
 }
-
-
-
-
-
-
-
 
 bool calcMask(double *HSV, double ranges[][2])
 {
@@ -580,7 +543,7 @@ void serialize_object()
 }
 void get_scan(Mat img, double array[][2], double WINDOWMAP[1][1000][4])
 {
-	cout << "inside get_scan()" << endl;
+	// cout << "inside get_scan()" << endl;
 	double *HSV = new double[3];
 	static int imgidx = 0;
 	if (imgidx == 0)
@@ -619,7 +582,7 @@ void get_scan(Mat img, double array[][2], double WINDOWMAP[1][1000][4])
 
 			if (bg == 0)
 			{
-				cout << col << endl;
+				// cout << col << endl;
 				WINDOWMAP[0][col][0] = planes[2].data[(imgidx)*col];
 				WINDOWMAP[0][col][1] = planes[1].data[(imgidx)*col];
 				WINDOWMAP[0][col][2] = planes[0].data[(imgidx)*col];
