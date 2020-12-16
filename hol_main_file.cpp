@@ -89,14 +89,26 @@ int main(int argc, char **argv)
 
 	get_scan(instream, HSV_RANGES, WINDOWMAP);
 
+	// testing the values of WINDOWMAP
+	// finding only the non-zero indices
+
+	for (size_t i = 0; i < 1000; i++)
+	{
+		if (WINDOWMAP[0][i][3] != 0)
+		{
+			cout<<i<<" ";
+		}
+		
+	}
+	
+
 	bool isempty = false;	int itr = 0; //temporary
 
-	while (itr<1)
+	while (itr<300)
 	{
 
 		if (isempty)
 		{
-			cout<<"inside 1st if loop- isempty = true!"<<endl;
 			get_scan(instream, HSV_RANGES, WINDOWMAP);
 			if (STREAMVALID == 0)
 			{
@@ -110,13 +122,13 @@ int main(int argc, char **argv)
 
 		for (size_t col = 0; col < scan_width; col++)
 		{
-			if (WINDOWMAP[wndwidx][col][4] == 1)
+			if (WINDOWMAP[wndwidx][col][3] == 1)
 			{
 				int east = col;
 				int burstpos = col;
 				label_index += 1;
 
-				while ((east < scan_width) && (WINDOWMAP[wndwidx][east + 1][4] == 1))
+				while ((east < scan_width) && (WINDOWMAP[wndwidx][east + 1][3] == 1))
 				{
 					east += 1;
 				}
@@ -574,15 +586,12 @@ void get_scan(Mat img, double array[][2], double WINDOWMAP[1][1000][4])
 			G = planes[1].data[(imgidx)*col];
 			B = planes[0].data[(imgidx)*col];
 
-			// cout<<"Value of G = "<<G<<endl;
-
 			RGB2HSV(R, G, B, HSV);
 
 			bg = calcMask(HSV, HSV_RANGES);
 
-			if (bg == 0)
+			if (!bg)
 			{
-				// cout << col << endl;
 				WINDOWMAP[0][col][0] = planes[2].data[(imgidx)*col];
 				WINDOWMAP[0][col][1] = planes[1].data[(imgidx)*col];
 				WINDOWMAP[0][col][2] = planes[0].data[(imgidx)*col];
