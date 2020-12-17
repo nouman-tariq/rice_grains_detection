@@ -44,7 +44,7 @@ bool calcMask(double *HSV, double HSV_RANGES[][2]);
 Ellipse calculate_ellipse();
 double check_connected(Ellipse e, double base_value);
 void process_object(uint8_t serialized_object_data[][4000]);
-void label_window();
+void label_window(int burstpos, uint16_t wdwidx, int east, Mat img, double array[][2]);
 void RGB2HSV(double R, double G, double B, double *HSV);
 void serialize_object();
 void get_scan(Mat img, double array[][2], double WINDOWMAP[1][1000][4]);
@@ -133,7 +133,7 @@ int main(int argc, char **argv)
 					east += 1;
 				}
 
-				// 			// label_window()
+				label_window(burstpos, wndwidx, east, instream, HSV_RANGES);
 				// 			// serialize_object()
 				// 			// calculate_ellipse()
 
@@ -280,17 +280,14 @@ void process_object(uint8_t serialized_object_data[][3080])
 	// serialized_object_data should be a pointer as well!
 	tempdata = serialized_object_data[0][0] + 1;
 }
-void label_window()
+void label_window(int burstpos, uint16_t wdwidx, int east, Mat img, double array[][2])
 {
 	static int moments, most_left, recursion_cnt;
 	int section_start, instream, hsv_ranges, most_right;
 	static int object_edges[][2] = {};
 	int row, col;
 
-	// GLOBALS
-	int STREAMVALID;
-	// WINDOWMAP
-
+	
 	if (!recursion_cnt)
 	{
 		recursion_cnt = 1;
@@ -582,9 +579,9 @@ void get_scan(Mat img, double array[][2], double WINDOWMAP[1][1000][4])
 		for (int col = 0; col < cols; col++)
 		{
 
-			R = planes[2].data[(imgidx)*col];
-			G = planes[1].data[(imgidx)*col];
-			B = planes[0].data[(imgidx)*col];
+			R = planes[2].data[(imgidx-1)*cols + col];
+			G = planes[1].data[(imgidx-1)*cols + col];
+			B = planes[0].data[(imgidx-1)*cols + col];
 
 			RGB2HSV(R, G, B, HSV);
 
@@ -592,9 +589,9 @@ void get_scan(Mat img, double array[][2], double WINDOWMAP[1][1000][4])
 
 			if (!bg)
 			{
-				WINDOWMAP[0][col][0] = planes[2].data[(imgidx)*col];
-				WINDOWMAP[0][col][1] = planes[1].data[(imgidx)*col];
-				WINDOWMAP[0][col][2] = planes[0].data[(imgidx)*col];
+				WINDOWMAP[0][col][0] = planes[2].data[(imgidx-1)*cols + col];
+				WINDOWMAP[0][col][1] = planes[1].data[(imgidx-1)*cols + col];
+				WINDOWMAP[0][col][2] = planes[0].data[(imgidx-1)*cols + col];
 				WINDOWMAP[0][col][3] = 1;
 			}
 		}
