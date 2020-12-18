@@ -27,12 +27,12 @@ struct Ellipse
 };
 struct moments
 {
-	float m00 = 2028;
-	float m10 = 1326873;
-	float m01 = 55961;
-	float m11 = 36582961;
-	float m02 = 1883041;
-	float m20 = 868487811;
+	float m00 = 0;
+	float m10 = 0;
+	float m01 = 0;
+	float m11 = 0;
+	float m02 = 0;
+	float m20 = 0;
 };
 
 /* functions definitions
@@ -44,7 +44,7 @@ bool calcMask(double *HSV, double HSV_RANGES[][2]);
 Ellipse calculate_ellipse();
 double check_connected(Ellipse e, double base_value);
 void process_object(uint8_t serialized_object_data[][4000]);
-void label_window(int burstpos, uint16_t wdwidx, int east, Mat img, double array[][2]);
+void label_window(int burstpos, uint16_t wdwidx, int east, Mat img);
 void RGB2HSV(double R, double G, double B, double *HSV);
 void serialize_object();
 void get_scan(Mat img, double array[][2], double WINDOWMAP[1][1000][4]);
@@ -133,7 +133,7 @@ int main(int argc, char **argv)
 					east += 1;
 				}
 
-				label_window(burstpos, wndwidx, east, instream, HSV_RANGES);
+				label_window(burstpos, wndwidx, east, instream);
 				// 			// serialize_object()
 				// 			// calculate_ellipse()
 
@@ -280,9 +280,9 @@ void process_object(uint8_t serialized_object_data[][3080])
 	// serialized_object_data should be a pointer as well!
 	tempdata = serialized_object_data[0][0] + 1;
 }
-void label_window(int burstpos, uint16_t wdwidx, int east, Mat img, double array[][2])
+void label_window(int burstpos, uint16_t wdwidx, int east, Mat img)
 {
-	static int moments, most_left, recursion_cnt;
+	static int most_left, recursion_cnt;
 	int section_start, instream, hsv_ranges, most_right;
 	static int object_edges[][2] = {};
 	int row, col;
@@ -291,18 +291,16 @@ void label_window(int burstpos, uint16_t wdwidx, int east, Mat img, double array
 	if (!recursion_cnt)
 	{
 		recursion_cnt = 1;
-		object_edges[1][1] = {section_start};
-		object_edges[1][2] = {col};
+		object_edges[0][0] = {section_start};
+		object_edges[0][1] = {col};
 		most_left = section_start;
 		most_right = col;
-		// moments = struct('m00', 0, 'm10', 0, 'm01', 0, 'm11', 0, 'm02', 0, 'm20', 0);
 	}
 	else
 	{
 		recursion_cnt += 1;
 	}
-
-	double height; //size of object_edges.
+	int height;
 	height = sizeof(object_edges);
 
 	if (height < row)
@@ -317,8 +315,6 @@ void label_window(int burstpos, uint16_t wdwidx, int east, Mat img, double array
 		most_right = col;
 	}
 
-	//while loop containing WINDOWMAP
-	double WINDOWMAP[][col][4] = {};
 	while ((col > 1) && (WINDOWMAP[row][col - 1][4] == 1))
 	{
 		col = col - 1;
@@ -326,9 +322,9 @@ void label_window(int burstpos, uint16_t wdwidx, int east, Mat img, double array
 
 	int m = col;
 
-	if (col < object_edges[row][1])
+	if (col < object_edges[row][0])
 	{
-		object_edges[row][1] = {col};
+		object_edges[row][0] = {col};
 	}
 
 	// size of WINDOWMAP
@@ -344,7 +340,7 @@ void label_window(int burstpos, uint16_t wdwidx, int east, Mat img, double array
 		int data_valid = 1;
 		while (data_valid == 1)
 		{
-			// moments = update_moments(moments, row, m);
+			// update_moments(moments, row, m);
 			WINDOWMAP[row][m][4] = 2;
 
 			if (((m + 1) > scan_width) || (WINDOWMAP[row][m + 1][4] != 1))
@@ -358,6 +354,8 @@ void label_window(int burstpos, uint16_t wdwidx, int east, Mat img, double array
 			m = m + 1;
 		}
 	}
+
+//12:30
 
 	while ((col < m) && (col > 0) && (col <= scan_width))
 	{

@@ -1,131 +1,158 @@
 #include <iostream>
-// #include <opencv2/highgui.hpp>
-// using namespace cv;
+#include <opencv2/highgui.hpp>
+using namespace cv;
 using namespace std;
 
-// void array1(int a, int b, int c, int *abc);
+double WINDOWMAP[1][1000][4];
+double HSV_RANGES[][2] = {0.45, 0.66, 0.7, 1, 0.5, 1};
+struct moments
+{
+	float m00 = 0;
+	float m10 = 0;
+	float m01 = 0;
+	float m11 = 0;
+	float m02 = 0;
+	float m20 = 0;
+};
+bool STREAMVALID;
+
+
+void label_window(int burstpos, uint16_t wdwidx, int east, Mat img);
 
 int main()
 {
+	Mat instream = imread("backside1.jpg");
+	int burstpos = 207;
+	uint16_t wndwidx = 1;
+	int east = 215;
+	STREAMVALID = 1;
+	
 
-    // Mat img;
-    // img = imread("backside1.jpg", IMREAD_COLOR);
-    // Mat planes[3];
-    // split(img, planes);
-    // char f1 = img.data[0];
-    // unsigned short R = *(img.ptr(0,0));
-    // cout<<R<<endl;
-    // uint8_t f2 = img.at<uint8_t>(0,0);
-    // cout<<f2<<endl;
-    // Vec3b intensity = img.at<Vec3b>(0,0); //(y,x)
-    // double blue = intensity.val[2];
-    // cout<<blue<<endl;
-    // double R = img.data[img.cols + 0];
-    // cout<<R<<endl;
-    // double value = planes[2].data[5890];
-    // cout << value << endl;
-    // double R = *(planes[0].ptr(0, 0));
-    // double G = *(planes[1].ptr(0, 0));
-    // double B = *(planes[2].ptr(0, 0));
-
-    double HSV[3];
-	double var_max, var_min, del_max, del_R, del_G, del_B;
-	double H, S, V;
-    double R, G, B;
-    R = 23; G = 116; B = 235;
-	double var_R = R / 255.0;
-	double var_G = G / 255.0;
-	double var_B = B / 255.0;
-
-	// finding the maximum
-	if ((var_R >= var_G) && (var_R >= var_B))
+	// initializing WINDOWMAP to 0
+	for (size_t k = 0; k < 4; k++)
 	{
-		var_max = var_R;
-	}
-	else if ((var_G >= var_R) && (var_G >= var_B))
-	{
-		var_max = var_G;
-	}
-	else if ((var_B >= var_R) && (var_G >= var_G))
-	{
-		var_max = var_B;
+		for (size_t j = 0; j < 1000; j++)
+		{
+			WINDOWMAP[0][j][k] = 0;
+		}
 	}
 
-	//finding the minimum
-	if ((var_R <= var_G) && (var_R <= var_B))
+	//initializing WINDOWMAP to step values
+	for (size_t i = burstpos - 1; i < east; i++)
 	{
-		var_min = var_R;
+		WINDOWMAP[0][i][3] = 1;
 	}
-	else if ((var_G <= var_R) && (var_G <= var_B))
-	{
-		var_min = var_G;
-	}
-	else if ((var_B <= var_R) && (var_G <= var_G))
-	{
-		var_min = var_B;
-	}
+	
 
-	del_max = var_max - var_min;
+	label_window(burstpos, wndwidx, east, instream);
 
-	V = var_max;
-	if (del_max == 0)
+
+}
+
+void label_window(int burstpos, uint16_t wdwidx, int east, Mat img)
+{
+	static int most_left, recursion_cnt;
+	int section_start, instream, hsv_ranges, most_right;
+	static int object_edges[][2] = {};
+	int row, col;
+
+	if (!recursion_cnt)
 	{
-		H = 0;
-		S = 0;
+		recursion_cnt = 1;
+		object_edges[0][0] = {section_start};
+		object_edges[0][1] = {col};
+		most_left = section_start;
+		most_right = col;
 	}
 	else
 	{
-		S = del_max / var_max;
-		del_R = (((var_max - var_R) / 6) + (del_max / 2)) / del_max;
-		del_G = (((var_max - var_G) / 6) + (del_max / 2)) / del_max;
-		del_B = (((var_max - var_B) / 6) + (del_max / 2)) / del_max;
+		recursion_cnt += 1;
+	}
+	int height;
+	height = sizeof(object_edges);
 
-		if (var_R == var_max)
+	if (height < row)
+	{
+		object_edges[row][1] = {col};
+		object_edges[row][2] = {col};
+	}
+
+	if (col > object_edges[row][2])
+	{
+		object_edges[row][2] = col;
+		most_right = col;
+	}
+
+	while ((col > 1) && (WINDOWMAP[row][col - 1][4] == 1))
+	{
+		col = col - 1;
+	}
+
+	int m = col;
+
+	if (col < object_edges[row][0])
+	{
+		object_edges[row][0] = {col};
+	}
+
+	// size of WINDOWMAP
+	int scan_width = sizeof(WINDOWMAP) / sizeof(WINDOWMAP[row][col - 1]);
+
+	if ((m <= scan_width) && (WINDOWMAP[row][m][4]) == 1)
+	{
+		if (m < most_left)
 		{
-			H = del_B - del_G;
-		}
-		else if (var_G == var_max)
-		{
-			H = 0.3334 + del_R - del_B;
-		}
-		else if (var_B == var_max)
-		{
-			H = 0.6667 + del_G - del_R;
+			most_left = m;
 		}
 
-		if (H < 0)
+		int data_valid = 1;
+		while (data_valid == 1)
 		{
-			H = H + 1;
-		}
-		if (H > 1)
-		{
-			H = H - 1;
+			// update_moments(moments, row, m);
+			WINDOWMAP[row][m][4] = 2;
+
+			if (((m + 1) > scan_width) || (WINDOWMAP[row][m + 1][4] != 1))
+			{
+				data_valid = 0;
+				if (object_edges[row][2] < m)
+				{
+					object_edges[row][2] = m;
+				}
+			}
+			m = m + 1;
 		}
 	}
-	
-	HSV[0] = H; HSV[1] = S; HSV[2] = V;
 
+	//12:30
 
+	while ((col < m) && (col > 0) && (col <= scan_width))
+	{
+		if ((row > 1) && (WINDOWMAP[row - 1][col][4] == 1))
+		{
+			// label_window(section_start, row-1, col, instream, hsv_ranges);
+		}
 
+		int wrows = sizeof(WINDOWMAP) / sizeof(WINDOWMAP[1]);
+		if ((wrows == row) && (STREAMVALID == 1))
+		{
+			// = get_scan(instream, hsv_ranges);
+		}
 
+		if (WINDOWMAP[row + 1][col][4] == 1)
+		{
+			// label_window(section_start, row-1, col, instream, hsv_ranges);
+		}
 
+		col = col + 1;
+	}
+
+	recursion_cnt -= 1;
+	if (recursion_cnt == 0)
+	{
+		recursion_cnt = {};
+		int obj_edges = object_edges[0][2];
+		int left_position = most_left;
+		// int out_moments = moments;
+		int width = (most_right - most_left) + 1;
+	}
 }
-/*
-int a = 10;
-int b = 20;
-int c = 30;
-
-int *abc = new int[3];
-array1(a, b, c, abc);
-
-cout<<abc[0]<<endl;
-}
-
-void array1(int a, int b, int c, int *abc)
-{
-    abc[0] = a+100;
-    abc[1] = b;
-    abc[2] = c;
-
-}
-*/
