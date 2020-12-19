@@ -22,11 +22,11 @@ void label_window(int burstpos, uint16_t wdwidx, int east, Mat img);
 int main()
 {
 	Mat instream = imread("backside1.jpg");
-	int burstpos = 207;
+	int burstpos = 206;
 	uint16_t wndwidx = 1;
-	int east = 215;
+	int east = 214;
 	STREAMVALID = 1;
-	
+
 
 	// initializing WINDOWMAP to 0
 	for (size_t k = 0; k < 4; k++)
@@ -38,7 +38,7 @@ int main()
 	}
 
 	//initializing WINDOWMAP to step values
-	for (size_t i = burstpos - 1; i < east; i++)
+	for (size_t i = burstpos; i <= east; i++)
 	{
 		WINDOWMAP[0][i][3] = 1;
 	}
@@ -49,12 +49,11 @@ int main()
 
 }
 
-void label_window(int burstpos, uint16_t wdwidx, int east, Mat img)
+void label_window(int section_start, uint16_t row, int col, Mat instream)
 {
 	static int most_left, recursion_cnt;
-	int section_start, instream, hsv_ranges, most_right;
+	int most_right;
 	static int object_edges[][2] = {};
-	int row, col;
 
 	if (!recursion_cnt)
 	{
@@ -69,36 +68,37 @@ void label_window(int burstpos, uint16_t wdwidx, int east, Mat img)
 		recursion_cnt += 1;
 	}
 	int height;
-	height = sizeof(object_edges);
+	height = sizeof(object_edges)/sizeof(object_edges[0]) + 1; // for test case adding 1
 
 	if (height < row)
 	{
-		object_edges[row][1] = {col};
-		object_edges[row][2] = {col};
+		object_edges[row-1][0] = {col};
+		object_edges[row-1][1] = {col};
 	}
 
-	if (col > object_edges[row][2])
+	if (col > object_edges[row-1][1])
 	{
-		object_edges[row][2] = col;
+		object_edges[row-1][1] = col;
 		most_right = col;
 	}
 
-	while ((col > 1) && (WINDOWMAP[row][col - 1][4] == 1))
+	while ((col > 1) && (WINDOWMAP[row-1][col - 1][3] == 1))
 	{
 		col = col - 1;
 	}
 
 	int m = col;
 
-	if (col < object_edges[row][0])
+	if (col < object_edges[row-1][0])
 	{
-		object_edges[row][0] = {col};
+		object_edges[row-1][0] = {col};
 	}
 
 	// size of WINDOWMAP
-	int scan_width = sizeof(WINDOWMAP) / sizeof(WINDOWMAP[row][col - 1]);
+	// int scan_width = sizeof(WINDOWMAP) / sizeof(WINDOWMAP[row-1][col - 1]);
+	int scan_width = instream.cols;
 
-	if ((m <= scan_width) && (WINDOWMAP[row][m][4]) == 1)
+	if ((m < scan_width) && (WINDOWMAP[row-1][m][3]) == 1)
 	{
 		if (m < most_left)
 		{
@@ -109,7 +109,7 @@ void label_window(int burstpos, uint16_t wdwidx, int east, Mat img)
 		while (data_valid == 1)
 		{
 			// update_moments(moments, row, m);
-			WINDOWMAP[row][m][4] = 2;
+			WINDOWMAP[row-1][m][4] = 2;
 
 			if (((m + 1) > scan_width) || (WINDOWMAP[row][m + 1][4] != 1))
 			{
