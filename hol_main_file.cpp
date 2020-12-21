@@ -44,7 +44,7 @@ bool calcMask(double *HSV, double HSV_RANGES[][2]);
 Ellipse calculate_ellipse();
 double check_connected(Ellipse e, double base_value);
 void process_object(uint8_t serialized_object_data[][4000]);
-void label_window(int burstpos, uint16_t wdwidx, int east, Mat img);
+void label_window(int burstpos, int wdwidx, int east, Mat img);
 void RGB2HSV(double R, double G, double B, double *HSV);
 void serialize_object();
 void get_scan(Mat img, double array[][2], double WINDOWMAP[1][1000][4]);
@@ -280,14 +280,14 @@ void process_object(uint8_t serialized_object_data[][3080])
 	// serialized_object_data should be a pointer as well!
 	tempdata = serialized_object_data[0][0] + 1;
 }
-void label_window(int burstpos, uint16_t wdwidx, int east, Mat img)
+
+void label_window(int section_start, int row, int col, Mat instream)
 {
 	static int most_left, recursion_cnt;
-	int section_start, instream, hsv_ranges, most_right;
+	int most_right;
 	static int object_edges[][2] = {};
-	int row, col;
+	moments M;
 
-	
 	if (!recursion_cnt)
 	{
 		recursion_cnt = 1;
@@ -300,37 +300,38 @@ void label_window(int burstpos, uint16_t wdwidx, int east, Mat img)
 	{
 		recursion_cnt += 1;
 	}
+	
 	int height;
-	height = sizeof(object_edges);
+	height = sizeof(object_edges)/sizeof(object_edges[0]) + 1; // for test case adding 1
 
 	if (height < row)
 	{
-		object_edges[row][1] = {col};
-		object_edges[row][2] = {col};
+		object_edges[row-1][0] = {col};
+		object_edges[row-1][1] = {col};
 	}
 
-	if (col > object_edges[row][2])
+	if (col > object_edges[row-1][1])
 	{
-		object_edges[row][2] = col;
+		object_edges[row-1][1] = col;
 		most_right = col;
 	}
 
-	while ((col > 1) && (WINDOWMAP[row][col - 1][4] == 1))
+	while ((col > 1) && (WINDOWMAP[row-1][col - 1][3] == 1))
 	{
 		col = col - 1;
 	}
 
 	int m = col;
 
-	if (col < object_edges[row][0])
+	if (col < object_edges[row-1][0])
 	{
-		object_edges[row][0] = {col};
+		object_edges[row-1][0] = {col};
 	}
 
-	// size of WINDOWMAP
-	int scan_width = sizeof(WINDOWMAP) / sizeof(WINDOWMAP[row][col - 1]);
+	// int scan_width = sizeof(WINDOWMAP) / sizeof(WINDOWMAP[row-1][col - 1]);
+	int scan_width = instream.cols;
 
-	if ((m <= scan_width) && (WINDOWMAP[row][m][4]) == 1)
+	if ((m < scan_width) && (WINDOWMAP[row-1][m][3]) == 1)
 	{
 		if (m < most_left)
 		{
@@ -340,39 +341,39 @@ void label_window(int burstpos, uint16_t wdwidx, int east, Mat img)
 		int data_valid = 1;
 		while (data_valid == 1)
 		{
-			// update_moments(moments, row, m);
-			WINDOWMAP[row][m][4] = 2;
+			update_moments(M, row, col);
+			WINDOWMAP[row-1][m][3] = 2;
 
-			if (((m + 1) > scan_width) || (WINDOWMAP[row][m + 1][4] != 1))
+			if (((m + 1) > scan_width) || (WINDOWMAP[row-1][m + 1][3] != 1))
 			{
 				data_valid = 0;
-				if (object_edges[row][2] < m)
+				if (object_edges[row-1][1] < m)
 				{
-					object_edges[row][2] = m;
+					object_edges[row-1][1] = m;
 				}
 			}
 			m = m + 1;
 		}
 	}
 
-//12:30
+
 
 	while ((col < m) && (col > 0) && (col <= scan_width))
 	{
 		if ((row > 1) && (WINDOWMAP[row - 1][col][4] == 1))
 		{
-			// label_window(section_start, row-1, col, instream, hsv_ranges);
+			label_window(section_start, row-1, col, instream);
 		}
 
-		int wrows = sizeof(WINDOWMAP) / sizeof(WINDOWMAP[1]);
+		int wrows = sizeof(WINDOWMAP) / sizeof(WINDOWMAP[0]);
 		if ((wrows == row) && (STREAMVALID == 1))
 		{
-			// = get_scan(instream, hsv_ranges);
+			get_scan(instream, HSV_RANGES, WINDOWMAP);
 		}
 
-		if (WINDOWMAP[row + 1][col][4] == 1)
+		if (WINDOWMAP[row + 1][col][1] == 1)
 		{
-			// label_window(section_start, row-1, col, instream, hsv_ranges);
+			label_window(section_start, row-1, col, instream);
 		}
 
 		col = col + 1;
@@ -384,10 +385,13 @@ void label_window(int burstpos, uint16_t wdwidx, int east, Mat img)
 		recursion_cnt = {};
 		int obj_edges = object_edges[0][2];
 		int left_position = most_left;
-		int out_moments = moments;
+		// int out_moments = moments;
 		int width = (most_right - most_left) + 1;
 	}
+
+
 }
+
 void RGB2HSV(double R, double G, double B, double *HSV)
 {
 	double var_max, var_min, del_max, del_R, del_G, del_B;
@@ -620,6 +624,15 @@ int uint2array(int id, int size, int array[])
 {
 	array[size] = {};
 	// need to make this function
+}
+void update_moments(moments &M, int row, int col)
+{
+	M.m00 = M.m00	+	(pow(col,0)	*	pow(row,0)); 
+	M.m10 = M.m10	+	(pow(col,1)	*	pow(row,0)); 
+	M.m01 = M.m01	+	(pow(col,0)	*	pow(row,1)); 
+	M.m11 = M.m11	+	(pow(col,1)	*	pow(row,1)); 
+	M.m02 = M.m02	+	(pow(col,0)	*	pow(row,2)); 
+	M.m20 = M.m20	+	(pow(col,2)	*	pow(row,0)); 
 }
 
 // g++ test.cpp -o testoutput -std=c++11 `pkg-config --cflags --libs opencv`
