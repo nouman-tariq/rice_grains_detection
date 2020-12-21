@@ -50,6 +50,9 @@ void serialize_object();
 void get_scan(Mat img, double array[][2], double WINDOWMAP[1][1000][4]);
 void image_read();
 int uint2array(int id, int size, int array[]);
+void update_moments(moments &M, int row, int col);
+
+
 
 int main(int argc, char **argv)
 {
@@ -139,7 +142,6 @@ int main(int argc, char **argv)
 
 				// 			// deserialize_object();
 				// 			// check_connected;
-
 				// 			// separate_connected_grains();
 			}
 
@@ -163,6 +165,9 @@ int main(int argc, char **argv)
 		// rowcount++;
 	}
 }
+
+
+
 
 bool calcMask(double *HSV, double ranges[][2])
 {
@@ -304,34 +309,34 @@ void label_window(int section_start, int row, int col, Mat instream)
 	int height;
 	height = sizeof(object_edges)/sizeof(object_edges[0]) + 1; // for test case adding 1
 
-	if (height < row)
+	if (height < row+1)
 	{
-		object_edges[row-1][0] = {col};
-		object_edges[row-1][1] = {col};
+		object_edges[row][0] = {col};
+		object_edges[row][1] = {col};
 	}
 
-	if (col > object_edges[row-1][1])
+	if (col > object_edges[row][1])
 	{
-		object_edges[row-1][1] = col;
+		object_edges[row][1] = col;
 		most_right = col;
 	}
 
-	while ((col > 1) && (WINDOWMAP[row-1][col - 1][3] == 1))
+	while ((col > 1) && (WINDOWMAP[row][col - 1][3] == 1))
 	{
 		col = col - 1;
 	}
 
 	int m = col;
 
-	if (col < object_edges[row-1][0])
+	if (col < object_edges[row][0])
 	{
-		object_edges[row-1][0] = {col};
+		object_edges[row][0] = {col};
 	}
 
 	// int scan_width = sizeof(WINDOWMAP) / sizeof(WINDOWMAP[row-1][col - 1]);
 	int scan_width = instream.cols;
 
-	if ((m < scan_width) && (WINDOWMAP[row-1][m][3]) == 1)
+	if ((m < scan_width) && (WINDOWMAP[row][m][3]) == 1)
 	{
 		if (m < most_left)
 		{
@@ -342,14 +347,14 @@ void label_window(int section_start, int row, int col, Mat instream)
 		while (data_valid == 1)
 		{
 			update_moments(M, row, col);
-			WINDOWMAP[row-1][m][3] = 2;
+			WINDOWMAP[row][m][3] = 2;
 
-			if (((m + 1) > scan_width) || (WINDOWMAP[row-1][m + 1][3] != 1))
+			if (((m + 1) > scan_width) || (WINDOWMAP[row][m + 1][3] != 1))
 			{
 				data_valid = 0;
-				if (object_edges[row-1][1] < m)
+				if (object_edges[row][1] < m)
 				{
-					object_edges[row-1][1] = m;
+					object_edges[row][1] = m;
 				}
 			}
 			m = m + 1;
@@ -358,22 +363,23 @@ void label_window(int section_start, int row, int col, Mat instream)
 
 
 
-	while ((col < m) && (col > 0) && (col <= scan_width))
+	while ((col < m) && (col > 0) && (col < scan_width))
 	{
-		if ((row > 1) && (WINDOWMAP[row - 1][col][4] == 1))
+		if ((row > 0) && (WINDOWMAP[row-1][col][3] == 1))
 		{
-			label_window(section_start, row-1, col, instream);
+			label_window(section_start, row, col, instream);
 		}
 
 		int wrows = sizeof(WINDOWMAP) / sizeof(WINDOWMAP[0]);
-		if ((wrows == row) && (STREAMVALID == 1))
+
+		if (((wrows-1) == row) && (STREAMVALID == 1))
 		{
 			get_scan(instream, HSV_RANGES, WINDOWMAP);
 		}
 
-		if (WINDOWMAP[row + 1][col][1] == 1)
+		if (WINDOWMAP[row][col][1] == 1)
 		{
-			label_window(section_start, row-1, col, instream);
+			label_window(section_start, row, col, instream);
 		}
 
 		col = col + 1;
