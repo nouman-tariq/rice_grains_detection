@@ -5,7 +5,7 @@ using namespace std;
 using namespace cv;
 
 // GLOBALS
-double WINDOWMAP[1][1000][4];
+int WINDOWMAP[1][1000][4];
 uint32_t OBJHDRSIZE;
 uint16_t ROWHDRSIZE;
 uint16_t SECTIONHDRSIZE;
@@ -47,12 +47,10 @@ void process_object(uint8_t serialized_object_data[][4000]);
 void label_window(int burstpos, int wdwidx, int east, Mat img);
 void RGB2HSV(double R, double G, double B, double *HSV);
 void serialize_object();
-void get_scan(Mat img, double array[][2], double WINDOWMAP[1][1000][4]);
+void get_scan(Mat img, int wdw_row);
 void image_read();
 int uint2array(int id, int size, int array[]);
 void update_moments(moments &M, int row, int col);
-
-
 
 int main(int argc, char **argv)
 {
@@ -72,7 +70,6 @@ int main(int argc, char **argv)
 	scan_width = instream.cols;
 	channels = instream.channels();
 
-
 	if (!rows)
 	{
 		STREAMVALID = 0;
@@ -90,48 +87,39 @@ int main(int argc, char **argv)
 		}
 	}
 
-	get_scan(instream, HSV_RANGES, WINDOWMAP);
+	get_scan(instream, 0);
 
 	// testing the values of WINDOWMAP
 	// finding only the non-zero indices
 
-	for (size_t i = 0; i < 1000; i++)
-	{
-		if (WINDOWMAP[0][i][3] != 0)
-		{
-			cout<<i<<" ";
-		}
-		
-	}
-	
+	bool isempty = false;
+	int itr = 0; //temporary
 
-	bool isempty = false;	int itr = 0; //temporary
-
-	while (itr<300)
+	while (itr < 300)
 	{
 
 		if (isempty)
 		{
-			get_scan(instream, HSV_RANGES, WINDOWMAP);
+			get_scan(instream, 0);
 			if (STREAMVALID == 0)
 			{
 				cout << "Stream ended .." << endl;
 			}
 			else
 			{
-				wndwidx = 0;
+				wndwidx = 1;
 			}
 		}
 
 		for (size_t col = 0; col < scan_width; col++)
 		{
-			if (WINDOWMAP[wndwidx][col][3] == 1)
+			if (WINDOWMAP[wndwidx-1][col][3] == 1)
 			{
 				int east = col;
 				int burstpos = col;
 				label_index += 1;
 
-				while ((east < scan_width) && (WINDOWMAP[wndwidx][east + 1][3] == 1))
+				while ((east < scan_width) && (WINDOWMAP[wndwidx-1][east + 1][3] == 1))
 				{
 					east += 1;
 				}
@@ -146,16 +134,16 @@ int main(int argc, char **argv)
 			}
 
 			// 		// process_object();
-			
 		}
-		itr++; isempty = true; // temporary
-		// for (size_t k = 0; k < channels; k++)
-		// {
-		// 	for (size_t j = 0; j < scan_width; j++)
-		// 	{
-		// 		WINDOWMAP[wndwidx][j][k] = 0;
-		// 	}
-		// }
+		itr++;
+		isempty = true; // temporary
+						// for (size_t k = 0; k < channels; k++)
+						// {
+						// 	for (size_t j = 0; j < scan_width; j++)
+						// 	{
+						// 		WINDOWMAP[wndwidx][j][k] = 0;
+						// 	}
+						// }
 
 		// int wdw_height = sizeof(WINDOWMAP) / (sizeof(WINDOWMAP[1]));
 		// if ((STREAMVALID == 0) && (wdw_height <= 1))
@@ -165,9 +153,6 @@ int main(int argc, char **argv)
 		// rowcount++;
 	}
 }
-
-
-
 
 bool calcMask(double *HSV, double ranges[][2])
 {
@@ -305,38 +290,38 @@ void label_window(int section_start, int row, int col, Mat instream)
 	{
 		recursion_cnt += 1;
 	}
-	
-	int height;
-	height = sizeof(object_edges)/sizeof(object_edges[0]) + 1; // for test case adding 1
 
-	if (height < row+1)
+	int height;
+	height = sizeof(object_edges) / sizeof(object_edges[0]) + 1; // for test case adding 1
+
+	if (height < row)
 	{
-		object_edges[row][0] = {col};
-		object_edges[row][1] = {col};
+		object_edges[row-1][0] = {col};
+		object_edges[row-1][1] = {col};
 	}
 
-	if (col > object_edges[row][1])
+	if (col > object_edges[row-1][1])
 	{
-		object_edges[row][1] = col;
+		object_edges[row-1][1] = col;
 		most_right = col;
 	}
 
-	while ((col > 1) && (WINDOWMAP[row][col - 1][3] == 1))
+	while ((col > 1) && (WINDOWMAP[row-1][col - 1][3] == 1))
 	{
 		col = col - 1;
 	}
 
 	int m = col;
 
-	if (col < object_edges[row][0])
+	if (col < object_edges[row-1][0])
 	{
-		object_edges[row][0] = {col};
+		object_edges[row-1][0] = {col};
 	}
 
 	// int scan_width = sizeof(WINDOWMAP) / sizeof(WINDOWMAP[row-1][col - 1]);
 	int scan_width = instream.cols;
 
-	if ((m < scan_width) && (WINDOWMAP[row][m][3]) == 1)
+	if ((m < scan_width) && (WINDOWMAP[row-1][m][3]) == 1)
 	{
 		if (m < most_left)
 		{
@@ -346,40 +331,38 @@ void label_window(int section_start, int row, int col, Mat instream)
 		int data_valid = 1;
 		while (data_valid == 1)
 		{
-			update_moments(M, row, col);
-			WINDOWMAP[row][m][3] = 2;
+			update_moments(M, row, col); //should the value of row be decreased here or not?
+			WINDOWMAP[row-1][m][3] = 2;
 
-			if (((m + 1) > scan_width) || (WINDOWMAP[row][m + 1][3] != 1))
+			if (((m + 1) > scan_width) || (WINDOWMAP[row-1][m + 1][3] != 1))
 			{
 				data_valid = 0;
-				if (object_edges[row][1] < m)
+				if (object_edges[row-1][1] < m)
 				{
-					object_edges[row][1] = m;
+					object_edges[row-1][1] = m;
 				}
 			}
 			m = m + 1;
 		}
 	}
 
-
-
 	while ((col < m) && (col > 0) && (col < scan_width))
 	{
-		if ((row > 0) && (WINDOWMAP[row-1][col][3] == 1))
+		if ((row > 1) && (WINDOWMAP[row - 2][col][3] == 1))
 		{
-			label_window(section_start, row, col, instream);
+			label_window(section_start, row-1, col, instream);
 		}
 
 		int wrows = sizeof(WINDOWMAP) / sizeof(WINDOWMAP[0]);
 
-		if (((wrows-1) == row) && (STREAMVALID == 1))
+		if ((wrows == row) && (STREAMVALID == 1))
 		{
-			get_scan(instream, HSV_RANGES, WINDOWMAP);
+			get_scan(instream, row + 1);
 		}
 
-		if (WINDOWMAP[row][col][1] == 1)
+		if (WINDOWMAP[row][col][3] == 1)
 		{
-			label_window(section_start, row, col, instream);
+			label_window(section_start, row+1, col, instream);
 		}
 
 		col = col + 1;
@@ -389,13 +372,9 @@ void label_window(int section_start, int row, int col, Mat instream)
 	if (recursion_cnt == 0)
 	{
 		recursion_cnt = {};
-		int obj_edges = object_edges[0][2];
 		int left_position = most_left;
-		// int out_moments = moments;
 		int width = (most_right - most_left) + 1;
 	}
-
-
 }
 
 void RGB2HSV(double R, double G, double B, double *HSV)
@@ -558,9 +537,9 @@ void serialize_object()
 		section_size = 0;
 	}
 }
-void get_scan(Mat img, double array[][2], double WINDOWMAP[1][1000][4])
+void get_scan(Mat img, int wdw_row = 0)
 {
-	// cout << "inside get_scan()" << endl;
+
 	double *HSV = new double[3];
 	static int imgidx = 0;
 	if (imgidx == 0)
@@ -568,9 +547,18 @@ void get_scan(Mat img, double array[][2], double WINDOWMAP[1][1000][4])
 		imgidx = 1;
 	}
 
-	// cout << "value of imgidx = " << imgidx << endl;
 	int rows = img.rows;
 	int cols = img.cols;
+
+	int RGBApixels[1][cols][4];
+
+	for (size_t k = 0; k < 4; k++)
+	{
+		for (size_t j = 0; j < cols; j++)
+		{
+			RGBApixels[0][j][k] = 0;
+		}
+	}
 
 	Mat planes[3];
 	split(img, planes);
@@ -587,9 +575,9 @@ void get_scan(Mat img, double array[][2], double WINDOWMAP[1][1000][4])
 		for (int col = 0; col < cols; col++)
 		{
 
-			R = planes[2].data[(imgidx-1)*cols + col];
-			G = planes[1].data[(imgidx-1)*cols + col];
-			B = planes[0].data[(imgidx-1)*cols + col];
+			R = planes[2].data[(imgidx - 1) * cols + col];
+			G = planes[1].data[(imgidx - 1) * cols + col];
+			B = planes[0].data[(imgidx - 1) * cols + col];
 
 			RGB2HSV(R, G, B, HSV);
 
@@ -597,14 +585,22 @@ void get_scan(Mat img, double array[][2], double WINDOWMAP[1][1000][4])
 
 			if (!bg)
 			{
-				WINDOWMAP[0][col][0] = planes[2].data[(imgidx-1)*cols + col];
-				WINDOWMAP[0][col][1] = planes[1].data[(imgidx-1)*cols + col];
-				WINDOWMAP[0][col][2] = planes[0].data[(imgidx-1)*cols + col];
-				WINDOWMAP[0][col][3] = 1;
+				RGBApixels[0][col][0] = planes[2].data[(imgidx - 1) * cols + col];
+				RGBApixels[0][col][1] = planes[1].data[(imgidx - 1) * cols + col];
+				RGBApixels[0][col][2] = planes[0].data[(imgidx - 1) * cols + col];
+				RGBApixels[0][col][3] = 1;
 			}
 		}
 		STREAMVALID = 1;
 		imgidx += 1;
+
+		for (size_t i = 0; i < cols; i++)
+		{
+			WINDOWMAP[wdw_row][i][0] = RGBApixels[0][i][0];
+			WINDOWMAP[wdw_row][i][1] = RGBApixels[0][i][1];
+			WINDOWMAP[wdw_row][i][2] = RGBApixels[0][i][2];
+			WINDOWMAP[wdw_row][i][3] = RGBApixels[0][i][3];
+		}
 	}
 }
 void image_read()
@@ -633,12 +629,12 @@ int uint2array(int id, int size, int array[])
 }
 void update_moments(moments &M, int row, int col)
 {
-	M.m00 = M.m00	+	(pow(col,0)	*	pow(row,0)); 
-	M.m10 = M.m10	+	(pow(col,1)	*	pow(row,0)); 
-	M.m01 = M.m01	+	(pow(col,0)	*	pow(row,1)); 
-	M.m11 = M.m11	+	(pow(col,1)	*	pow(row,1)); 
-	M.m02 = M.m02	+	(pow(col,0)	*	pow(row,2)); 
-	M.m20 = M.m20	+	(pow(col,2)	*	pow(row,0)); 
+	M.m00 = M.m00 + (pow(col, 0) * pow(row, 0));
+	M.m10 = M.m10 + (pow(col, 1) * pow(row, 0));
+	M.m01 = M.m01 + (pow(col, 0) * pow(row, 1));
+	M.m11 = M.m11 + (pow(col, 1) * pow(row, 1));
+	M.m02 = M.m02 + (pow(col, 0) * pow(row, 2));
+	M.m20 = M.m20 + (pow(col, 2) * pow(row, 0));
 }
 
 // g++ test.cpp -o testoutput -std=c++11 `pkg-config --cflags --libs opencv`
