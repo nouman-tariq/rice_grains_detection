@@ -5,7 +5,7 @@ using namespace std;
 using namespace cv;
 
 // GLOBALS
-int WINDOWMAP[1][1000][4];
+int WINDOWMAP[116][309][4];
 uint32_t OBJHDRSIZE;
 uint16_t ROWHDRSIZE;
 uint16_t SECTIONHDRSIZE;
@@ -81,9 +81,12 @@ int main(int argc, char **argv)
 
 	for (size_t k = 0; k < channels + 1; k++)
 	{
-		for (size_t j = 0; j < 1000; j++)
+		for (size_t j = 0; j < scan_width; j++)
 		{
-			WINDOWMAP[0][j][k] = 0;
+			for (size_t i = 0; i < rows; i++)
+			{
+				WINDOWMAP[i][j][k] = 0;
+			}
 		}
 	}
 
@@ -113,13 +116,13 @@ int main(int argc, char **argv)
 
 		for (size_t col = 0; col < scan_width; col++)
 		{
-			if (WINDOWMAP[wndwidx-1][col][3] == 1)
+			if (WINDOWMAP[wndwidx - 1][col][3] == 1)
 			{
 				int east = col;
 				int burstpos = col;
 				label_index += 1;
 
-				while ((east < scan_width) && (WINDOWMAP[wndwidx-1][east + 1][3] == 1))
+				while ((east < scan_width) && (WINDOWMAP[wndwidx - 1][east + 1][3] == 1))
 				{
 					east += 1;
 				}
@@ -296,32 +299,32 @@ void label_window(int section_start, int row, int col, Mat instream)
 
 	if (height < row)
 	{
-		object_edges[row-1][0] = {col};
-		object_edges[row-1][1] = {col};
+		object_edges[row - 1][0] = {col};
+		object_edges[row - 1][1] = {col};
 	}
 
-	if (col > object_edges[row-1][1])
+	if (col > object_edges[row - 1][1])
 	{
-		object_edges[row-1][1] = col;
+		object_edges[row - 1][1] = col;
 		most_right = col;
 	}
 
-	while ((col > 1) && (WINDOWMAP[row-1][col - 1][3] == 1))
+	while ((col > 1) && (WINDOWMAP[row - 1][col - 1][3] == 1))
 	{
 		col = col - 1;
 	}
 
 	int m = col;
 
-	if (col < object_edges[row-1][0])
+	if (col < object_edges[row - 1][0])
 	{
-		object_edges[row-1][0] = {col};
+		object_edges[row - 1][0] = {col};
 	}
 
 	// int scan_width = sizeof(WINDOWMAP) / sizeof(WINDOWMAP[row-1][col - 1]);
 	int scan_width = instream.cols;
 
-	if ((m < scan_width) && (WINDOWMAP[row-1][m][3]) == 1)
+	if ((m < scan_width) && (WINDOWMAP[row - 1][m][3]) == 1)
 	{
 		if (m < most_left)
 		{
@@ -332,14 +335,14 @@ void label_window(int section_start, int row, int col, Mat instream)
 		while (data_valid == 1)
 		{
 			update_moments(M, row, col); //should the value of row be decreased here or not?
-			WINDOWMAP[row-1][m][3] = 2;
+			WINDOWMAP[row - 1][m][3] = 2;
 
-			if (((m + 1) > scan_width) || (WINDOWMAP[row-1][m + 1][3] != 1))
+			if (((m + 1) > scan_width) || (WINDOWMAP[row - 1][m + 1][3] != 1))
 			{
 				data_valid = 0;
-				if (object_edges[row-1][1] < m)
+				if (object_edges[row - 1][1] < m)
 				{
-					object_edges[row-1][1] = m;
+					object_edges[row - 1][1] = m;
 				}
 			}
 			m = m + 1;
@@ -350,7 +353,7 @@ void label_window(int section_start, int row, int col, Mat instream)
 	{
 		if ((row > 1) && (WINDOWMAP[row - 2][col][3] == 1))
 		{
-			label_window(section_start, row-1, col, instream);
+			label_window(section_start, row - 1, col, instream);
 		}
 
 		int wrows = sizeof(WINDOWMAP) / sizeof(WINDOWMAP[0]);
@@ -362,7 +365,7 @@ void label_window(int section_start, int row, int col, Mat instream)
 
 		if (WINDOWMAP[row][col][3] == 1)
 		{
-			label_window(section_start, row+1, col, instream);
+			label_window(section_start, row + 1, col, instream);
 		}
 
 		col = col + 1;
@@ -550,16 +553,6 @@ void get_scan(Mat img, int wdw_row = 0)
 	int rows = img.rows;
 	int cols = img.cols;
 
-	int RGBApixels[1][cols][4];
-
-	for (size_t k = 0; k < 4; k++)
-	{
-		for (size_t j = 0; j < cols; j++)
-		{
-			RGBApixels[0][j][k] = 0;
-		}
-	}
-
 	Mat planes[3];
 	split(img, planes);
 	double R, G, B;
@@ -585,22 +578,14 @@ void get_scan(Mat img, int wdw_row = 0)
 
 			if (!bg)
 			{
-				RGBApixels[0][col][0] = planes[2].data[(imgidx - 1) * cols + col];
-				RGBApixels[0][col][1] = planes[1].data[(imgidx - 1) * cols + col];
-				RGBApixels[0][col][2] = planes[0].data[(imgidx - 1) * cols + col];
-				RGBApixels[0][col][3] = 1;
+				WINDOWMAP[wdw_row][col][0] = planes[2].data[(imgidx - 1) * cols + col];
+				WINDOWMAP[wdw_row][col][0] = planes[1].data[(imgidx - 1) * cols + col];
+				WINDOWMAP[wdw_row][col][0] = planes[0].data[(imgidx - 1) * cols + col];
+				WINDOWMAP[wdw_row][col][0] = 1;
 			}
 		}
 		STREAMVALID = 1;
 		imgidx += 1;
-
-		for (size_t i = 0; i < cols; i++)
-		{
-			WINDOWMAP[wdw_row][i][0] = RGBApixels[0][i][0];
-			WINDOWMAP[wdw_row][i][1] = RGBApixels[0][i][1];
-			WINDOWMAP[wdw_row][i][2] = RGBApixels[0][i][2];
-			WINDOWMAP[wdw_row][i][3] = RGBApixels[0][i][3];
-		}
 	}
 }
 void image_read()
