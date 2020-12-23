@@ -6,7 +6,7 @@ using namespace cv;
 
 // GLOBALS
 uint16_t WINDOWMAP[116][309][4];
-uint32_t OBJHDRSIZE;
+uint16_t OBJHDRSIZE;
 uint16_t ROWHDRSIZE;
 uint16_t SECTIONHDRSIZE;
 uint16_t STREAMVALID;
@@ -79,26 +79,12 @@ int main(int argc, char **argv)
 	uint16_t wndwidx = 1;
 	uint16_t label_index = 0;
 
-	for (size_t k = 0; k < channels + 1; k++)
-	{
-		for (size_t j = 0; j < scan_width; j++)
-		{
-			for (size_t i = 0; i < rows; i++)
-			{
-				WINDOWMAP[i][j][k] = 0;
-			}
-		}
-	}
-
-	get_scan(instream, 0);
-
-	// testing the values of WINDOWMAP
-	// finding only the non-zero indices
+	get_scan(instream, wndwidx);
 
 	bool isempty = false;
 	int itr = 0; //temporary
 
-	while (itr < 300)
+	while (itr<300)
 	{
 
 		if (isempty)
@@ -140,13 +126,14 @@ int main(int argc, char **argv)
 		}
 		itr++;
 		isempty = true; // temporary
-						// for (size_t k = 0; k < channels; k++)
-						// {
-						// 	for (size_t j = 0; j < scan_width; j++)
-						// 	{
-						// 		WINDOWMAP[wndwidx][j][k] = 0;
-						// 	}
-						// }
+
+		// for (size_t k = 0; k < channels; k++)
+		// {
+		// 	for (size_t j = 0; j < scan_width; j++)
+		// 	{
+		// 		WINDOWMAP[wndwidx][j][k] = 0;
+		// 	}
+		// }
 
 		// int wdw_height = sizeof(WINDOWMAP) / (sizeof(WINDOWMAP[1]));
 		// if ((STREAMVALID == 0) && (wdw_height <= 1))
@@ -540,7 +527,7 @@ void serialize_object()
 		section_size = 0;
 	}
 }
-void get_scan(Mat img, int wdw_row = 0)
+void get_scan(Mat img, int wdw_row)
 {
 
 	float *HSV = new float[3];
@@ -578,10 +565,21 @@ void get_scan(Mat img, int wdw_row = 0)
 
 			if (!bg)
 			{
-				WINDOWMAP[wdw_row][col][0] = planes[2].data[(imgidx - 1) * cols + col];
-				WINDOWMAP[wdw_row][col][0] = planes[1].data[(imgidx - 1) * cols + col];
-				WINDOWMAP[wdw_row][col][0] = planes[0].data[(imgidx - 1) * cols + col];
-				WINDOWMAP[wdw_row][col][0] = 1;
+				if (wdw_row > 0)
+				{
+					WINDOWMAP[wdw_row - 1][col][0] = planes[2].data[(imgidx - 1) * cols + col];
+					WINDOWMAP[wdw_row - 1][col][1] = planes[1].data[(imgidx - 1) * cols + col];
+					WINDOWMAP[wdw_row - 1][col][2] = planes[0].data[(imgidx - 1) * cols + col];
+					WINDOWMAP[wdw_row - 1][col][3] = 1;
+				}
+				else
+				{
+					WINDOWMAP[wdw_row][col][0] = planes[2].data[(imgidx - 1) * cols + col];
+					WINDOWMAP[wdw_row][col][1] = planes[1].data[(imgidx - 1) * cols + col];
+					WINDOWMAP[wdw_row][col][2] = planes[0].data[(imgidx - 1) * cols + col];
+					WINDOWMAP[wdw_row][col][3] = 1;
+				}
+				
 			}
 		}
 		STREAMVALID = 1;
