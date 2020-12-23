@@ -5,12 +5,12 @@ using namespace std;
 using namespace cv;
 
 // GLOBALS
-int WINDOWMAP[116][309][4];
+uint16_t WINDOWMAP[116][309][4];
 uint32_t OBJHDRSIZE;
 uint16_t ROWHDRSIZE;
 uint16_t SECTIONHDRSIZE;
 uint16_t STREAMVALID;
-double HSV_RANGES[][2] = {0.45, 0.66, 0.7, 1, 0.5, 1};
+float HSV_RANGES[][2] = {0.45, 0.66, 0.7, 1, 0.5, 1};
 bool is_connected = false;
 
 struct Ellipse
@@ -40,7 +40,7 @@ for the time being, i will avoid calling these
 functions through the head
 */
 
-bool calcMask(double *HSV, double HSV_RANGES[][2]);
+bool calcMask(float *HSV);
 Ellipse calculate_ellipse();
 double check_connected(Ellipse e, double base_value);
 void process_object(uint8_t serialized_object_data[][4000]);
@@ -157,7 +157,7 @@ int main(int argc, char **argv)
 	}
 }
 
-bool calcMask(double *HSV, double ranges[][2])
+bool calcMask(float *HSV)
 {
 
 	double H, S, V, hmin, hmax, smin, smax, vmin, vmax;
@@ -168,16 +168,16 @@ bool calcMask(double *HSV, double ranges[][2])
 	V = HSV[2];
 
 	// Get thresholds for Hue.
-	hmin = ranges[0][0];
-	hmax = ranges[0][1];
+	hmin = HSV_RANGES[0][0];
+	hmax = HSV_RANGES[0][1];
 
 	// Get thresholds for Saturation
-	smin = ranges[1][0];
-	smax = ranges[1][1];
+	smin = HSV_RANGES[1][0];
+	smax = HSV_RANGES[1][1];
 
 	// Get thresholds for Value
-	vmin = ranges[2][0];
-	vmax = ranges[2][1];
+	vmin = HSV_RANGES[2][0];
+	vmax = HSV_RANGES[2][1];
 
 	// Create mask based on thresholds
 	Hbinary = (H >= hmin) & (H <= hmax);
@@ -380,13 +380,13 @@ void label_window(int section_start, int row, int col, Mat instream)
 	}
 }
 
-void RGB2HSV(double R, double G, double B, double *HSV)
+void RGB2HSV(float R, float G, float B, float *HSV)
 {
-	double var_max, var_min, del_max, del_R, del_G, del_B;
-	double H, S, V;
-	double var_R = R / 255.0;
-	double var_G = G / 255.0;
-	double var_B = B / 255.0;
+	float var_max, var_min, del_max, del_R, del_G, del_B;
+	float H, S, V;
+	float var_R = R / 255.0;
+	float var_G = G / 255.0;
+	float var_B = B / 255.0;
 
 	// finding the maximum
 	if ((var_R >= var_G) && (var_R >= var_B))
@@ -543,7 +543,7 @@ void serialize_object()
 void get_scan(Mat img, int wdw_row = 0)
 {
 
-	double *HSV = new double[3];
+	float *HSV = new float[3];
 	static int imgidx = 0;
 	if (imgidx == 0)
 	{
@@ -555,7 +555,7 @@ void get_scan(Mat img, int wdw_row = 0)
 
 	Mat planes[3];
 	split(img, planes);
-	double R, G, B;
+	float R, G, B;
 	bool bg;
 
 	if (rows < imgidx)
@@ -574,7 +574,7 @@ void get_scan(Mat img, int wdw_row = 0)
 
 			RGB2HSV(R, G, B, HSV);
 
-			bg = calcMask(HSV, HSV_RANGES);
+			bg = calcMask(HSV);
 
 			if (!bg)
 			{
