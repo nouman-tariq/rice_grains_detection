@@ -343,7 +343,34 @@ void label_window(int section_start, int row, int col, Mat instream)
 			label_window(section_start, row - 1, col, instream);
 		}
 
-		int wrows = sizeof(WINDOWMAP) / sizeof(WINDOWMAP[0]);
+		int total_rows = sizeof(WINDOWMAP) / sizeof(WINDOWMAP[0]);
+		int wrows, temp;
+		// adding a loop to figure out the wrows
+		for (size_t i = 0; i < total_rows; i++)
+		{
+			for (size_t j = 0; j < scan_width; j++)
+			{
+				temp++;
+				if (WINDOWMAP[i][j][3] != 0)
+				{
+					break;
+				}
+
+				if (temp == scan_width-1)
+				{
+					wrows = i-1;
+				}
+				
+				
+			}
+			temp = 0;
+			if (wrows>0)
+			{
+				break;
+			}
+			
+		}
+		
 
 		if ((wrows == row) && (STREAMVALID == 1))
 		{
