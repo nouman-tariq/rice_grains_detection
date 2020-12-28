@@ -312,7 +312,7 @@ void label_window(int section_start, int row, int col, Mat instream)
 {
 	static int most_left, recursion_cnt;
 	int most_right;
-	static int object_edges[][2] = {};
+	static int object_edges[100][2] = {};
 	moments M;
 
 	if (!recursion_cnt)
@@ -329,7 +329,16 @@ void label_window(int section_start, int row, int col, Mat instream)
 	}
 
 	int height;
-	height = sizeof(object_edges) / sizeof(object_edges[0]) + 1; // for test case adding 1
+	for (size_t i = 0; i < 100; i++)
+	{
+		if (	(object_edges[i][0] && object_edges[i][1]) == 0	)
+		{
+			height = i;
+			break;
+		}
+		
+	}
+	
 
 	if (height < row)
 	{
@@ -358,7 +367,7 @@ void label_window(int section_start, int row, int col, Mat instream)
 	// int scan_width = sizeof(WINDOWMAP) / sizeof(WINDOWMAP[row-1][col - 1]);
 	int scan_width = instream.cols;
 
-	if ((m < scan_width) && (WINDOWMAP[row - 1][m][3]) == 1)
+	if ((m <= scan_width-1) && (WINDOWMAP[row - 1][m][3]) == 1) // need to verify the changes
 	{
 		if (m < most_left)
 		{
@@ -368,7 +377,7 @@ void label_window(int section_start, int row, int col, Mat instream)
 		int data_valid = 1;
 		while (data_valid == 1)
 		{
-			update_moments(M, row, col); //should the value of row be decreased here or not?
+			update_moments(M, row, col); 
 			WINDOWMAP[row - 1][m][3] = 2;
 
 			if (((m + 1) > scan_width) || (WINDOWMAP[row - 1][m + 1][3] != 1))
@@ -385,7 +394,7 @@ void label_window(int section_start, int row, int col, Mat instream)
 
 	while ((col < m) && (col > 0) && (col < scan_width))
 	{
-		if ((row > 1) && (WINDOWMAP[row - 2][col][3] == 1))
+		if ((row > 0) && (WINDOWMAP[row - 2][col][3] == 1))
 		{
 			label_window(section_start, row - 1, col, instream);
 		}
