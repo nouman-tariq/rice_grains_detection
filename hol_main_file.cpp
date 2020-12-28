@@ -125,21 +125,68 @@ int main(int argc, char **argv)
 			// 		// process_object();
 		}
 		itr++;
-		isempty = true; // temporary
 
-		// for (size_t k = 0; k < channels; k++)
-		// {
-		// 	for (size_t j = 0; j < scan_width; j++)
-		// 	{
-		// 		WINDOWMAP[wndwidx][j][k] = 0;
-		// 	}
-		// }
+		int wdw_height, temp;
+		for (size_t i = 0; i < rows; i++)
+		{
+			for (size_t j = 0; j < scan_width; j++)
+			{
+				temp++;
+				if (WINDOWMAP[i][j][3] != 0)
+				{
+					break;
+				}
 
-		// int wdw_height = sizeof(WINDOWMAP) / (sizeof(WINDOWMAP[1]));
-		// if ((STREAMVALID == 0) && (wdw_height <= 1))
-		// {
-		// 	break;
-		// }
+				if (temp == scan_width-1)
+				{
+					wdw_height = i-1;
+				}
+				
+				
+			}
+			temp = 0;
+			if (wdw_height>0)
+			{
+				break;
+			}
+			
+		}
+
+		for (size_t k = 0; k < channels; k++)
+		{
+			for (size_t j = 0; j < scan_width; j++)
+			{				
+				for (size_t i = 0; i < rows; i++)
+				{
+					if (WINDOWMAP[i][j][k] != 0)
+					{
+						isempty = false;
+						break;
+					}
+					else
+					{
+						isempty = true;
+					}
+					
+					
+				}
+				if (!isempty)
+				{
+					break;
+				}
+					
+				
+			}
+			if(!isempty)
+			{
+				break;
+			}
+		}
+
+		if ((STREAMVALID == 0) && (wdw_height < 1))
+		{
+			break;
+		}
 		// rowcount++;
 	}
 }
