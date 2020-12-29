@@ -394,7 +394,7 @@ void label_window(int section_start, int row, int col, Mat instream)
 
 	while ((col < m) && (col > 0) && (col < scan_width))
 	{
-		if ((row > 0) && (WINDOWMAP[row - 2][col][3] == 1))
+		if ((row > 1) && (WINDOWMAP[row - 2][col][3] == 1))
 		{
 			label_window(section_start, row - 1, col, instream);
 		}
