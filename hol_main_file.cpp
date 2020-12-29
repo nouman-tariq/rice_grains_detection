@@ -430,7 +430,7 @@ void label_window(int section_start, int row, int col, Mat instream)
 
 		if ((wrows == row) && (STREAMVALID == 1))
 		{
-			get_scan(instream, row + 1); //facing a problem with the values of static imgidx
+			get_scan(instream, row + 1); 
 		}
 
 		if (WINDOWMAP[row][col][3] == 1)
