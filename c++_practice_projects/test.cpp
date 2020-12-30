@@ -29,7 +29,7 @@ void account_query::write_details()
     ofstream outfile;
     outfile.open("account_details.bank", ios::binary|ios::app);
     add_details();
-    outfile.write();
+    outfile.write(reinterpret_cast<char *>(this), sizeof(*this));
     outfile.close();    
 }
 int main()
