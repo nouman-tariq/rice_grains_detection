@@ -5,21 +5,26 @@
             "label": "C/C++: g++ build active file",
             "command": "/usr/bin/g++",
             "args": [
+                "g++",
                 "-g",
                 "${file}",
                 "-o",
-                "${fileDirname}/${fileBasenameNoExtension}"
+                "${fileDirname}/${fileBasenameNoExtension}",
+                "-std=c++11",
+                "`pkg-config --cflags --libs opencv`"
             ],
             "options": {
-                "cwd": "/usr/bin"
+                "cwd": "/usr/bin",
+                "includePath": "/usr/local/include/opencv4/"
             },
             "problemMatcher": [
                 "$gcc"
             ],
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            },
+            // "group": {
+            //     "kind": "build",
+            //     "isDefault": true,
+
+            // },
             "detail": "Generated task by Debugger"
         }
     ],

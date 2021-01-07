@@ -4,6 +4,7 @@
 using namespace std;
 using namespace cv;
 
+
 // GLOBALS
 uint16_t WINDOWMAP[116][309][4];
 uint16_t OBJHDRSIZE;
