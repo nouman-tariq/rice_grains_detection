@@ -301,14 +301,6 @@ double check_connected(Ellipse E, double base_size = 0.00)
 
 	return ave_value;
 }
-void process_object(uint8_t serialized_object_data[][3080])
-{
-	uint8_t tempdata;
-	// size of serialized_object_data should be sorted
-	// serialized_object_data should be a pointer as well!
-	tempdata = serialized_object_data[0][0] + 1;
-}
-
 void label_window(int section_start, int row, int col, Mat instream)
 {
 	static int most_left, recursion_cnt;
@@ -688,11 +680,6 @@ void image_read()
 
 	int num_rows = 309;
 	int num_cols = 116;
-}
-int uint2array(int id, int size, int array[])
-{
-	array[size] = {};
-	// need to make this function
 }
 void update_moments(moments &M, int row, int col)
 {
