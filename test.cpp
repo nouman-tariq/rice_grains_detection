@@ -137,7 +137,7 @@ void label_window(int section_start, int row, int col, Mat instream)
 		int wrows = sizeof(WINDOWMAP) / sizeof(WINDOWMAP[1]);
 		if ((wrows == row) && (STREAMVALID == 1))
 		{
-			get_scan(instream, HSV_RANGES, WINDOWMAP);
+			// get_scan(instream, HSV_RANGES, WINDOWMAP);
 		}
 
 		if (WINDOWMAP[row + 1][col][4] == 1)
