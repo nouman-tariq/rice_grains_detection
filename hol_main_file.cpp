@@ -7,10 +7,12 @@ using namespace cv;
 
 // GLOBALS
 uint16_t WINDOWMAP[116][309][4];
-uint16_t OBJHDRSIZE;
-uint16_t ROWHDRSIZE;
-uint16_t SECTIONHDRSIZE;
-uint16_t STREAMVALID;
+uint16_t OBJHDRSIZE = 0;
+uint16_t ROWHDRSIZE = 0;
+uint16_t SECTIONHDRSIZE = 0;
+uint16_t STREAMVALID = 0;
+uint16_t left_position = 0;
+uint16_t width = 0;
 float HSV_RANGES[][2] = {0.45, 0.66, 0.7, 1, 0.5, 1};
 bool is_connected = false;
 
@@ -393,7 +395,7 @@ void label_window(int section_start, int row, int col, Mat instream)
 		}
 
 		int total_rows = sizeof(WINDOWMAP) / sizeof(WINDOWMAP[0]);
-		int wrows, temp;
+		int wrows = 0, temp =0;
 		// adding a loop to figure out the wrows
 		for (size_t i = 0; i < total_rows; i++)
 		{
@@ -405,9 +407,9 @@ void label_window(int section_start, int row, int col, Mat instream)
 					break;
 				}
 
-				if (temp == scan_width-1)
+				if (temp == scan_width)
 				{
-					wrows = i-1;
+					wrows = i;
 				}
 				
 				
@@ -438,8 +440,8 @@ void label_window(int section_start, int row, int col, Mat instream)
 	if (recursion_cnt == 0)
 	{
 		recursion_cnt = {};
-		int left_position = most_left;
-		int width = (most_right - most_left) + 1;
+		left_position = most_left;
+		width = (most_right - most_left) + 1;
 	}
 }
 
