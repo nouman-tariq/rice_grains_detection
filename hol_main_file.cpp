@@ -306,7 +306,7 @@ void label_window(int section_start, int row, int col, Mat instream)
 	static int most_left, recursion_cnt;
 	int most_right;
 	static int object_edges[100][2] = {};
-	moments M;
+	static moments M;
 
 	if (!recursion_cnt)
 	{
