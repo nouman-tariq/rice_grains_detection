@@ -7,6 +7,7 @@ using namespace cv;
 
 // GLOBALS
 uint16_t WINDOWMAP[116][309][4];
+int row_ends[100][2];
 uint16_t OBJHDRSIZE = 0;
 uint16_t ROWHDRSIZE = 0;
 uint16_t SECTIONHDRSIZE = 0;
@@ -117,7 +118,7 @@ int main(int argc, char **argv)
 				}
 
 				label_window(burstpos, wndwidx, east, instream);
-				// 			// serialize_object()
+				serialize_object();
 				// 			// calculate_ellipse()
 
 				// 			// deserialize_object();
@@ -442,6 +443,11 @@ void label_window(int section_start, int row, int col, Mat instream)
 		recursion_cnt = {};
 		left_position = most_left;
 		width = (most_right - most_left) + 1;
+		for (size_t i = 0; i < 100; i++)
+		{
+			row_ends[i][0] = object_edges[i][0];
+			row_ends[i][1] = object_edges[i][1];
+		}
 	}
 }
 
@@ -523,21 +529,14 @@ void RGB2HSV(float R, float G, float B, float *HSV)
 	HSV[1] = S;
 	HSV[2] = V;
 }
-/*
 void serialize_object()
 {
-	double inimage[][901][4] = {};
-	double row_ends[][2] = {};
-	double left_position, width;
-
 	uint32_t ID = 0;
 	double data_ptr = OBJHDRSIZE + ROWHDRSIZE + SECTIONHDRSIZE + 1;
 
 	double num_rows = sizeof(row_ends) / sizeof(row_ends[0]);
 	int out_size = (num_rows * width) + (num_rows * 20);
-	int outdata[][out_size] = {};
-
-	// need of initializing outdata to zero?
+	uint8_t outdata[][out_size] = {};
 
 	int hdr_id[4];
 	uint2array(ID, 4, hdr_id);
@@ -576,7 +575,7 @@ void serialize_object()
 		while (idx < (instartcol + num_cols))
 		{
 			uint16_t sectionpos = (idx - instartcol + shift + 1);
-			while ((idx < (instartcol + num_cols)) && (inimage[row][idx][4] != 0))
+			while ((idx < (instartcol + num_cols)) && (WINDOWMAP[row][idx][3] != 0))
 			{
 				for (size_t i = data_ptr; i < data_ptr + 2; i++)
 				{
@@ -584,7 +583,7 @@ void serialize_object()
 					section_size = 0;
 					sectionhdrptr = data_ptr;
 					data_ptr = SECTIONHDRSIZE + sectionhdrptr;
-					while (inimage[row][idx][4] == 0)
+					while (WINDOWMAP[row][idx][3] == 0)
 					{
 						idx += 1;
 					}
@@ -606,7 +605,6 @@ void serialize_object()
 		section_size = 0;
 	}
 }
-*/
 void get_scan(Mat img, int wdw_row)
 {
 
