@@ -55,7 +55,7 @@ void get_scan(Mat img, int wdw_row);
 void image_read();
 int uint2array(int id, int size, int array[]);
 void update_moments(moments &M, int row, int col);
-
+void uint2array(uint32_t ID, int numbytes, uint8_t hdr_id);
 int main(int argc, char **argv)
 {
 	Mat instream;
@@ -692,22 +692,30 @@ void update_moments(moments &M, int row, int col)
 	M.m02 = M.m02 + (pow(col, 0) * pow(row, 2));
 	M.m20 = M.m20 + (pow(col, 2) * pow(row, 0));
 }
-void uint2array(uint32_t ID, int numbytes, int hdr_id)
+void uint2array(uint32_t ID, int numbytes, uint8_t hdr_id)
 {
+	// uint8_t outcast;
+
 	switch (numbytes)
 	{
 	case 1:
-		hdr_id = uint8_t (ID);
+		uint8_t outcast;
+		outcast = uint8_t (ID);
 	case 2:
-		hdr_id = uint16_t (ID);
+		uint16_t outcast;
+		outcast = uint16_t (ID);
 	case 4:
-		hdr_id = uint32_t (ID);
+		uint32_t outcast;
+		outcast = uint32_t (ID);
 	case 8:
-		hdr_id = uint64_t (ID);
+		uint64_t outcast;
+		outcast = uint64_t (ID);
 	default:
 		print("Invalid bytes specified! Exiting");
 		break;
 	}
+
+	// hdr_id = (uint8_t) outcast;
 }
 
 
