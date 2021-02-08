@@ -692,6 +692,24 @@ void update_moments(moments &M, int row, int col)
 	M.m02 = M.m02 + (pow(col, 0) * pow(row, 2));
 	M.m20 = M.m20 + (pow(col, 2) * pow(row, 0));
 }
+void uint2array(uint32_t ID, int numbytes, int hdr_id)
+{
+	switch (numbytes)
+	{
+	case 1:
+		hdr_id = uint8_t (ID);
+	case 2:
+		hdr_id = uint16_t (ID);
+	case 4:
+		hdr_id = uint32_t (ID);
+	case 8:
+		hdr_id = uint64_t (ID);
+	default:
+		print("Invalid bytes specified! Exiting");
+		break;
+	}
+}
+
 
 // g++ -g hol_main_file.cpp -o hol_main_file -std=c++11 `pkg-config --cflags --libs opencv`
 // ./testoutput
