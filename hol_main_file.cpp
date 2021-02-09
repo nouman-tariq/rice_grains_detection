@@ -549,26 +549,41 @@ void serialize_object()
 	int out_size = (num_rows * width) + (num_rows * 20);
 	uint8_t outdata[out_size][out_size] = {};
 
-	uint8_t *hdr_id = new uint8_t[4];		
+	uint8_t *hdr_id = new uint8_t[4];
+	for (size_t i = 0; i < 4; i++)
+	{
+		hdr_id[i] = 0;
+	}		
 	uint2array(ID, 4, hdr_id);
 	for (size_t i = 0; i < 4; i++)
 	{
 		outdata[i][0] = hdr_id[i];
 	}
 
+
 	uint8_t *hdr_num_rows = new uint8_t[2];
+	for (size_t i = 0; i < 2; i++)
+	{
+		hdr_num_rows[i] = 0;
+	}	
 	uint2array(num_rows, 2, hdr_num_rows);
 	for (size_t i = 0; i < 2; i++)
 	{
-		outdata[i + 4][0] = hdr_num_rows[i];
+		outdata[4+i][0] = hdr_num_rows[i];
 	}
 
+
 	uint8_t *hdr_width = new uint8_t[2];
+	for (size_t i = 0; i < 2; i++)
+	{
+		hdr_width[i] = 0;
+	}	
 	uint2array(width, 2, hdr_width);
 	for (size_t i = 0; i < 2; i++)
 	{
-		outdata[i + 6][0] = hdr_width[i];
+		outdata[6+i][0] = hdr_width[i];
 	}
+
 
 	int num_sections = 1;
 	int section_size = 0;
@@ -703,38 +718,42 @@ void update_moments(moments &M, int row, int col)
 	M.m02 = M.m02 + (pow(col, 0) * pow(row, 2));
 	M.m20 = M.m20 + (pow(col, 2) * pow(row, 0));
 }
-void uint2array(uint32_t ID, int numbytes, uint8_t *hdr_id)
+void uint2array(uint32_t num, int numbytes, uint8_t *hdr_id)
 {
 	switch (numbytes)
 	{
 	case 1:
 		uint8_t outcast_8;
-		outcast_8 = uint8_t (ID);
+		outcast_8 = uint8_t (num);
 		for (size_t i = 0; i < numbytes; i++)
 		{
 			hdr_id[i] = (uint8_t) outcast_8;
 		}
+		break;
 	case 2:
 		uint16_t outcast_16;
-		outcast_16 = uint16_t (ID);
+		outcast_16 = uint16_t (num);
 		for (size_t i = 0; i < numbytes; i++)
 			{
 				hdr_id[i] = (uint8_t) outcast_16;
 			}
+			break;
 	case 4:
 		uint32_t outcast_32;
-		outcast_32 = uint32_t (ID);
+		outcast_32 = uint32_t (num);
 		for (size_t i = 0; i < numbytes; i++)
 		{
 			hdr_id[i] = (uint8_t) outcast_32;
 		}
+		break;
 	case 8:
 		uint64_t outcast_64;
-		outcast_64 = uint64_t (ID);
+		outcast_64 = uint64_t (num);
 		for (size_t i = 0; i < numbytes; i++)
 		{
 			hdr_id[i] = (uint8_t) outcast_64;
 		}
+		break;
 	default:
 		cout<<"Invalid data type entered- "<<endl;
 		break;
