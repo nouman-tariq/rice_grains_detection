@@ -725,34 +725,22 @@ void uint2array(uint32_t num, int numbytes, uint8_t *hdr_id)
 	case 1:
 		uint8_t outcast_8;
 		outcast_8 = uint8_t (num);
-		for (size_t i = 0; i < numbytes; i++)
-		{
-			hdr_id[i] = (uint8_t) outcast_8;
-		}
+		hdr_id[0] = (uint8_t) outcast_8;
 		break;
 	case 2:
 		uint16_t outcast_16;
 		outcast_16 = uint16_t (num);
-		for (size_t i = 0; i < numbytes; i++)
-			{
-				hdr_id[i] = (uint8_t) outcast_16;
-			}
-			break;
+		hdr_id[0] = (uint8_t) outcast_16;
+		break;
 	case 4:
 		uint32_t outcast_32;
 		outcast_32 = uint32_t (num);
-		for (size_t i = 0; i < numbytes; i++)
-		{
-			hdr_id[i] = (uint8_t) outcast_32;
-		}
+		hdr_id[0] = (uint8_t) outcast_32;
 		break;
 	case 8:
 		uint64_t outcast_64;
 		outcast_64 = uint64_t (num);
-		for (size_t i = 0; i < numbytes; i++)
-		{
-			hdr_id[i] = (uint8_t) outcast_64;
-		}
+		hdr_id[0] = (uint8_t) outcast_64;
 		break;
 	default:
 		cout<<"Invalid data type entered- "<<endl;
