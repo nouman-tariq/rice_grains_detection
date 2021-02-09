@@ -53,7 +53,7 @@ void RGB2HSV(double R, double G, double B, double *HSV);
 void serialize_object();
 void get_scan(Mat img, int wdw_row);
 void image_read();
-int uint2array(int id, int size, int array[]);
+void uint2array(uint32_t ID, int numbytes, uint8_t *hdr_id);
 void update_moments(moments &M, int row, int col);
 void uint2array(uint32_t ID, int numbytes, uint8_t hdr_id);
 int main(int argc, char **argv)
@@ -538,21 +538,21 @@ void serialize_object()
 	int out_size = (num_rows * width) + (num_rows * 20);
 	uint8_t outdata[][out_size] = {};
 
-	int hdr_id[4];
+	uint8_t *hdr_id = new uint8_t[4];
 	uint2array(ID, 4, hdr_id);
 	for (size_t i = 0; i < 4; i++)
 	{
 		outdata[i][0] = hdr_id[i];
 	}
 
-	int hdr_num_rows[2];
+	uint8_t *hdr_num_rows = new uint8_t[2];
 	uint2array(num_rows, 2, hdr_num_rows);
 	for (size_t i = 0; i < 2; i++)
 	{
 		outdata[i + 4][0] = hdr_num_rows[i];
 	}
 
-	int hdr_width[2];
+	uint8_t *hdr_width = new uint8_t[2];
 	uint2array(width, 2, hdr_width);
 	for (size_t i = 0; i < 2; i++)
 	{
@@ -590,7 +590,7 @@ void serialize_object()
 				}
 			}
 		}
-		int row_hdr_array[2];
+		uint8_t *row_hdr_array = new uint8_t[2];
 		uint2array(ID, 2, row_hdr_array);
 		for (size_t i = 0; i < 2; i++)
 		{
@@ -692,30 +692,31 @@ void update_moments(moments &M, int row, int col)
 	M.m02 = M.m02 + (pow(col, 0) * pow(row, 2));
 	M.m20 = M.m20 + (pow(col, 2) * pow(row, 0));
 }
-void uint2array(uint32_t ID, int numbytes, uint8_t hdr_id)
+void uint2array(uint32_t ID, int numbytes, uint8_t *hdr_id)
 {
-	// uint8_t outcast;
-
 	switch (numbytes)
 	{
 	case 1:
-		uint8_t outcast;
-		outcast = uint8_t (ID);
+		uint8_t outcast_8;
+		outcast_8 = uint8_t (ID);
+		hdr_id[0] = (uint8_t) outcast_8;
 	case 2:
-		uint16_t outcast;
-		outcast = uint16_t (ID);
+		uint16_t outcast_16;
+		outcast_16 = uint16_t (ID);
+		hdr_id[0] = (uint8_t) outcast_16;
 	case 4:
-		uint32_t outcast;
-		outcast = uint32_t (ID);
+		uint32_t outcast_32;
+		outcast_32 = uint32_t (ID);
+		hdr_id[0] = (uint8_t) outcast_32;
 	case 8:
-		uint64_t outcast;
-		outcast = uint64_t (ID);
+		uint64_t outcast_64;
+		outcast_64 = uint64_t (ID);
+		hdr_id[0] = (uint8_t) outcast_64;
 	default:
-		print("Invalid bytes specified! Exiting");
+		cout<<"Invalid data type entered- "<<endl;
 		break;
 	}
 
-	// hdr_id = (uint8_t) outcast;
 }
 
 
