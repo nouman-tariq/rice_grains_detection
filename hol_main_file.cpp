@@ -550,8 +550,6 @@ void serialize_object()
 	uint8_t outdata[out_size][out_size] = {};
 
 	uint8_t *hdr_id = new uint8_t[4];		
-
-
 	uint2array(ID, 4, hdr_id);
 	for (size_t i = 0; i < 4; i++)
 	{
