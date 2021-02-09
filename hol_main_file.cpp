@@ -534,11 +534,24 @@ void serialize_object()
 	uint32_t ID = 0;
 	double data_ptr = OBJHDRSIZE + ROWHDRSIZE + SECTIONHDRSIZE + 1;
 
-	double num_rows = sizeof(row_ends) / sizeof(row_ends[0]);
-	int out_size = (num_rows * width) + (num_rows * 20);
-	uint8_t outdata[][out_size] = {};
+	double temp_num_rows = sizeof(row_ends) / sizeof(row_ends[0]);
+	int num_rows = 0, temp =0;
+	// adding a loop to figure out the num_rows
+	for (size_t i = 0; i < temp_num_rows; i++)
+	{
+		if ((row_ends[i][0] == 0)&&(row_ends[i][1] == 0))
+		{
+			num_rows = i;
+			break;
+		}			
+	}
 
-	uint8_t *hdr_id = new uint8_t[4];
+	int out_size = (num_rows * width) + (num_rows * 20);
+	uint8_t outdata[out_size][out_size] = {};
+
+	uint8_t *hdr_id = new uint8_t[4];		
+
+
 	uint2array(ID, 4, hdr_id);
 	for (size_t i = 0; i < 4; i++)
 	{
@@ -699,19 +712,31 @@ void uint2array(uint32_t ID, int numbytes, uint8_t *hdr_id)
 	case 1:
 		uint8_t outcast_8;
 		outcast_8 = uint8_t (ID);
-		hdr_id[0] = (uint8_t) outcast_8;
+		for (size_t i = 0; i < numbytes; i++)
+		{
+			hdr_id[i] = (uint8_t) outcast_8;
+		}
 	case 2:
 		uint16_t outcast_16;
 		outcast_16 = uint16_t (ID);
-		hdr_id[0] = (uint8_t) outcast_16;
+		for (size_t i = 0; i < numbytes; i++)
+			{
+				hdr_id[i] = (uint8_t) outcast_16;
+			}
 	case 4:
 		uint32_t outcast_32;
 		outcast_32 = uint32_t (ID);
-		hdr_id[0] = (uint8_t) outcast_32;
+		for (size_t i = 0; i < numbytes; i++)
+		{
+			hdr_id[i] = (uint8_t) outcast_32;
+		}
 	case 8:
 		uint64_t outcast_64;
 		outcast_64 = uint64_t (ID);
-		hdr_id[0] = (uint8_t) outcast_64;
+		for (size_t i = 0; i < numbytes; i++)
+		{
+			hdr_id[i] = (uint8_t) outcast_64;
+		}
 	default:
 		cout<<"Invalid data type entered- "<<endl;
 		break;
