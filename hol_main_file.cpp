@@ -602,23 +602,39 @@ void serialize_object()
 		{
 
 			uint16_t sectionpos = (idx - instartcol + shift + 1);
-			while ((idx < (instartcol + num_cols)) && (WINDOWMAP[row][idx][3] != 0))
+			while ((idx < (instartcol + num_cols + 1)) && (WINDOWMAP[row][idx][3] != 0)) // +1 added temporarily
 			{
-			 	outdata[data_ptr + 0][0] = (uint8_t) WINDOWMAP[row][idx][0];
-				outdata[data_ptr + 1][0] = (uint8_t) WINDOWMAP[row][idx][1];
-				outdata[data_ptr + 2][0] = (uint8_t) WINDOWMAP[row][idx][2];
+			 	outdata[data_ptr - 1][0] = (uint8_t) WINDOWMAP[row][idx][0]; // value of data_ptr is decreased inside image indexing
+				outdata[data_ptr + 0][0] = (uint8_t) WINDOWMAP[row][idx][1];
+				outdata[data_ptr + 1][0] = (uint8_t) WINDOWMAP[row][idx][2];
 
 				data_ptr += 3;
 				section_size += 1;
 				idx += 1;
 			}
 
-			uint2array(sectionpos,	 2, outdata[sectionhdrptr+0][0]);
-			uint2array(sectionpos,	 2, outdata[sectionhdrptr+1][0]);
-			uint2array(section_size, 2, outdata[sectionhdrptr+2][0]);
-			uint2array(section_size, 2, outdata[sectionhdrptr+3][0]);
+			uint8_t *temp_array = new uint8_t[2];
+			for (size_t i = 0; i < 2; i++)
+			{
+				temp_array[i] = 0;
+			}	
+			uint2array(sectionpos, 2, temp_array);
+			for (size_t i = 0; i < 2; i++)
+			{
+				outdata[sectionhdrptr+i][0] = temp_array[i];
+			}
 
-			while ((idx < (instartcol + num_cols)) && (WINDOWMAP[row][idx][3] == 0))
+			for (size_t i = 0; i < 2; i++)
+			{
+				temp_array[i] = 0;
+			}	
+			uint2array(section_size, 2, temp_array);
+			for (size_t i = 2; i < 4; i++)
+			{
+				outdata[sectionhdrptr+i][0] = temp_array[i];
+			}
+
+			while ((idx < (instartcol + num_cols + 1)) && (WINDOWMAP[row][idx][3] == 0)) //added +1 temporarily
 			{
 				num_sections += 1;
 				section_size = 0;
@@ -633,17 +649,17 @@ void serialize_object()
 			
 		}
 
-		/*
-		uint8_t *row_hdr_array = new uint8_t[2];
-		uint2array(ID, 2, row_hdr_array);
+		uint8_t *temp_array = new uint8_t[2];
 		for (size_t i = 0; i < 2; i++)
 		{
-			outdata[rowhdrptr + i][0] = row_hdr_array[i];
+			temp_array[i] = 0;
+		}	
+		uint2array(num_sections, 2, temp_array);
+		for (size_t i = 0; i < 2; i++)
+		{
+			outdata[rowhdrptr+i][0] = temp_array[i];
 		}
-		*/
 
-		uint2array(num_sections, 2, outdata[rowhdrptr+0][0]);
-		uint2array(num_sections, 2, outdata[rowhdrptr+1][0]);
 		rowhdrptr = data_ptr;
 		sectionhdrptr = ROWHDRSIZE + rowhdrptr;
 		data_ptr = SECTIONHDRSIZE + sectionhdrptr;
