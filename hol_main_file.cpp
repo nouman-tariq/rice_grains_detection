@@ -532,7 +532,7 @@ void RGB2HSV(float R, float G, float B, float *HSV)
 void serialize_object()
 {
 	uint32_t ID = 0;
-	double data_ptr = OBJHDRSIZE + ROWHDRSIZE + SECTIONHDRSIZE + 1;
+	int data_ptr = OBJHDRSIZE + ROWHDRSIZE + SECTIONHDRSIZE + 1;
 
 	double temp_num_rows = sizeof(row_ends) / sizeof(row_ends[0]);
 	int num_rows = 0, temp =0;
@@ -600,35 +600,56 @@ void serialize_object()
 		int idx = instartcol;
 		while (idx < (instartcol + num_cols))
 		{
+
 			uint16_t sectionpos = (idx - instartcol + shift + 1);
 			while ((idx < (instartcol + num_cols)) && (WINDOWMAP[row][idx][3] != 0))
 			{
-				for (size_t i = data_ptr; i < data_ptr + 2; i++)
-				{
-					num_sections += 1;
-					section_size = 0;
-					sectionhdrptr = data_ptr;
-					data_ptr = SECTIONHDRSIZE + sectionhdrptr;
-					while (WINDOWMAP[row][idx][3] == 0)
-					{
-						idx += 1;
-					}
-				}
+			 	outdata[data_ptr + 0][0] = (uint8_t) WINDOWMAP[row][idx][0];
+				outdata[data_ptr + 1][0] = (uint8_t) WINDOWMAP[row][idx][1];
+				outdata[data_ptr + 2][0] = (uint8_t) WINDOWMAP[row][idx][2];
+
+				data_ptr += 3;
+				section_size += 1;
+				idx += 1;
 			}
+
+			uint2array(sectionpos,	 2, outdata[sectionhdrptr+0][0]);
+			uint2array(sectionpos,	 2, outdata[sectionhdrptr+1][0]);
+			uint2array(section_size, 2, outdata[sectionhdrptr+2][0]);
+			uint2array(section_size, 2, outdata[sectionhdrptr+3][0]);
+
+			while ((idx < (instartcol + num_cols)) && (WINDOWMAP[row][idx][3] == 0))
+			{
+				num_sections += 1;
+				section_size = 0;
+				sectionhdrptr = data_ptr;
+				data_ptr = SECTIONHDRSIZE + sectionhdrptr;
+				while (WINDOWMAP[row][idx][3] == 0)
+				{
+					idx += 1;
+				}
+			
+			}
+			
 		}
+
+		/*
 		uint8_t *row_hdr_array = new uint8_t[2];
 		uint2array(ID, 2, row_hdr_array);
 		for (size_t i = 0; i < 2; i++)
 		{
 			outdata[rowhdrptr + i][0] = row_hdr_array[i];
 		}
+		*/
 
+		uint2array(num_sections, 2, outdata[rowhdrptr+0][0]);
+		uint2array(num_sections, 2, outdata[rowhdrptr+1][0]);
 		rowhdrptr = data_ptr;
 		sectionhdrptr = ROWHDRSIZE + rowhdrptr;
 		data_ptr = SECTIONHDRSIZE + sectionhdrptr;
-
 		num_sections = 1;
 		section_size = 0;
+	
 	}
 }
 void get_scan(Mat img, int wdw_row)
