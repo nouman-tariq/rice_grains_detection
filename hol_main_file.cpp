@@ -602,7 +602,7 @@ void serialize_object()
 		{
 
 			uint16_t sectionpos = (idx - instartcol + shift + 1);
-			while ((idx < (instartcol + num_cols + 1)) && (WINDOWMAP[row][idx][3] != 0)) // +1 added temporarily
+			while ((idx < (instartcol + num_cols)) && (WINDOWMAP[row][idx][3] != 0))
 			{
 			 	outdata[data_ptr - 1][0] = (uint8_t) WINDOWMAP[row][idx][0]; // value of data_ptr is decreased inside image indexing
 				outdata[data_ptr + 0][0] = (uint8_t) WINDOWMAP[row][idx][1];
@@ -621,7 +621,7 @@ void serialize_object()
 			uint2array(sectionpos, 2, temp_array);
 			for (size_t i = 0; i < 2; i++)
 			{
-				outdata[sectionhdrptr+i][0] = temp_array[i];
+				outdata[sectionhdrptr-1+i][0] = temp_array[i];
 			}
 
 			for (size_t i = 0; i < 2; i++)
@@ -631,10 +631,10 @@ void serialize_object()
 			uint2array(section_size, 2, temp_array);
 			for (size_t i = 2; i < 4; i++)
 			{
-				outdata[sectionhdrptr+i][0] = temp_array[i];
+				outdata[sectionhdrptr-1+i][0] = temp_array[i-2];
 			}
 
-			while ((idx < (instartcol + num_cols + 1)) && (WINDOWMAP[row][idx][3] == 0)) //added +1 temporarily
+			while ((idx < (instartcol + num_cols)) && (WINDOWMAP[row][idx][3] == 0))
 			{
 				num_sections += 1;
 				section_size = 0;
@@ -657,7 +657,7 @@ void serialize_object()
 		uint2array(num_sections, 2, temp_array);
 		for (size_t i = 0; i < 2; i++)
 		{
-			outdata[rowhdrptr+i][0] = temp_array[i];
+			outdata[rowhdrptr-1+i][0] = temp_array[i];
 		}
 
 		rowhdrptr = data_ptr;
