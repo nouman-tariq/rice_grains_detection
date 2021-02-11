@@ -65,7 +65,7 @@ int main(int argc, char **argv)
 	instream = imread("backside1.jpg", IMREAD_COLOR);
 
 	moments mm;
-	Ellipse ellipse;
+	Ellipse ellipse[1000]; // temporarily setting the structure member size, need to find the permanent solution later.
 	OBJHDRSIZE = 8;
 	ROWHDRSIZE = 2;
 	SECTIONHDRSIZE = 4;
@@ -116,7 +116,6 @@ int main(int argc, char **argv)
 			{
 				int east = col;
 				int burstpos = col;
-				label_index += 1;
 
 				while ((east < scan_width) && (WINDOWMAP[wndwidx - 1][east + 1][3] == 1))
 				{
@@ -125,8 +124,10 @@ int main(int argc, char **argv)
 
 				mm = label_window(burstpos, wndwidx, east, instream);
 				outobject = serialize_object();
-				ellipse = calculate_ellipse(mm);
-				
+				ellipse[label_index] = calculate_ellipse(mm);
+				ellipse[label_index].y = (ellipse[label_index].y + rowcount) - 1;
+				label_index += 1;
+
 				// 			// deserialize_object();
 				// 			// check_connected;
 				// 			// separate_connected_grains();
