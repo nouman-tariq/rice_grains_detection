@@ -126,7 +126,7 @@ int main(int argc, char **argv)
 				mm = label_window(burstpos, wndwidx, east, instream);
 				outobject = serialize_object();
 				ellipse = calculate_ellipse(mm);
-
+				
 				// 			// deserialize_object();
 				// 			// check_connected;
 				// 			// separate_connected_grains();
