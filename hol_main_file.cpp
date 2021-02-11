@@ -45,22 +45,27 @@ following functions.
 */
 
 bool calcMask(float *HSV);
-Ellipse calculate_ellipse();
+Ellipse calculate_ellipse(moments &mm);
 double check_connected(Ellipse e, double base_value);
 void process_object(uint8_t serialized_object_data[][4000]);
-void label_window(int burstpos, int wdwidx, int east, Mat img);
+moments label_window(int burstpos, int wdwidx, int east, Mat img);
 void RGB2HSV(double R, double G, double B, double *HSV);
-void serialize_object();
+uint8_t * serialize_object();
 void get_scan(Mat img, int wdw_row);
 void image_read();
 void uint2array(uint32_t ID, int numbytes, uint8_t *hdr_id);
 void update_moments(moments &M, int row, int col);
 void uint2array(uint32_t ID, int numbytes, uint8_t hdr_id);
+
+
+
 int main(int argc, char **argv)
 {
 	Mat instream;
 	instream = imread("backside1.jpg", IMREAD_COLOR);
 
+	moments mm;
+	Ellipse ellipse;
 	OBJHDRSIZE = 8;
 	ROWHDRSIZE = 2;
 	SECTIONHDRSIZE = 4;
@@ -68,6 +73,7 @@ int main(int argc, char **argv)
 	uint16_t Connected_grains = 0;
 	//	uint16_t NUM_ROWS = 1257;
 	//	uint16_t NUM_COLS = 901;
+	uint8_t *outobject;
 
 	int rows, scan_width, channels;
 	rows = instream.rows;
@@ -117,9 +123,9 @@ int main(int argc, char **argv)
 					east += 1;
 				}
 
-				label_window(burstpos, wndwidx, east, instream);
-				serialize_object();
-				// 			// calculate_ellipse()
+				mm = label_window(burstpos, wndwidx, east, instream);
+				outobject = serialize_object();
+				ellipse = calculate_ellipse(mm);
 
 				// 			// deserialize_object();
 				// 			// check_connected;
@@ -195,6 +201,9 @@ int main(int argc, char **argv)
 	}
 }
 
+
+
+
 bool calcMask(float *HSV)
 {
 
@@ -226,9 +235,8 @@ bool calcMask(float *HSV)
 	// cout<<"value of BW = "<<BW<<endl;
 	return BW;
 }
-Ellipse calculate_ellipse()
+Ellipse calculate_ellipse(moments &M)
 {
-	moments M;
 	Ellipse E;
 	float a, b, c, d;
 
@@ -304,7 +312,7 @@ double check_connected(Ellipse E, double base_size = 0.00)
 
 	return ave_value;
 }
-void label_window(int section_start, int row, int col, Mat instream)
+moments label_window(int section_start, int row, int col, Mat instream)
 {
 	static int most_left, recursion_cnt;
 	int most_right;
@@ -448,6 +456,7 @@ void label_window(int section_start, int row, int col, Mat instream)
 			row_ends[i][0] = object_edges[i][0];
 			row_ends[i][1] = object_edges[i][1];
 		}
+		return M;
 	}
 }
 
@@ -529,7 +538,7 @@ void RGB2HSV(float R, float G, float B, float *HSV)
 	HSV[1] = S;
 	HSV[2] = V;
 }
-void serialize_object()
+uint8_t * serialize_object()
 {
 	uint32_t ID = 0;
 	int data_ptr = OBJHDRSIZE + ROWHDRSIZE + SECTIONHDRSIZE + 1;
@@ -547,7 +556,7 @@ void serialize_object()
 	}
 
 	int out_size = (num_rows * width) + (num_rows * 20);
-	uint8_t *outdata = new uint8_t[out_size*out_size];
+	static uint8_t *outdata = new uint8_t[out_size*out_size];
 	for (size_t i = 0; i < (out_size*out_size); i++)
 	{
 		outdata[i] = 0;
@@ -672,6 +681,7 @@ void serialize_object()
 		section_size = 0;
 	
 	}
+	return outdata;
 }
 void get_scan(Mat img, int wdw_row)
 {
