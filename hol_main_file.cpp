@@ -50,7 +50,8 @@ double check_connected(Ellipse e, double base_value);
 void process_object(uint8_t serialized_object_data[][4000]);
 moments label_window(int burstpos, int wdwidx, int east, Mat img);
 void RGB2HSV(double R, double G, double B, double *HSV);
-uint8_t * serialize_object();
+uint8_t * serialize_object(int &out_size);
+// void deserialize_object(uint8_t *indata);
 void get_scan(Mat img, int wdw_row);
 void image_read();
 void uint2array(uint32_t ID, int numbytes, uint8_t *hdr_id);
@@ -93,6 +94,7 @@ int main(int argc, char **argv)
 
 	bool isempty = false;
 	int itr = 0; //temporary
+	int out_size = 0;
 
 	while (itr<300)
 	{
@@ -123,7 +125,7 @@ int main(int argc, char **argv)
 				}
 
 				mm = label_window(burstpos, wndwidx, east, instream);
-				outobject = serialize_object();
+				outobject = serialize_object(out_size);
 				ellipse[label_index] = calculate_ellipse(mm);
 				ellipse[label_index].y = (ellipse[label_index].y + rowcount) - 1;
 				label_index += 1;
@@ -539,7 +541,7 @@ void RGB2HSV(float R, float G, float B, float *HSV)
 	HSV[1] = S;
 	HSV[2] = V;
 }
-uint8_t * serialize_object()
+uint8_t * serialize_object(int &out_size)
 {
 	uint32_t ID = 0;
 	int data_ptr = OBJHDRSIZE + ROWHDRSIZE + SECTIONHDRSIZE + 1;
@@ -556,7 +558,7 @@ uint8_t * serialize_object()
 		}			
 	}
 
-	int out_size = (num_rows * width) + (num_rows * 20);
+	out_size = (num_rows * width) + (num_rows * 20);
 	static uint8_t *outdata = new uint8_t[out_size*out_size];
 	for (size_t i = 0; i < (out_size*out_size); i++)
 	{
