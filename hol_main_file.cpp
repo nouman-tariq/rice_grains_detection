@@ -140,7 +140,7 @@ int main(int argc, char **argv)
 		int wdw_height, temp;
 		for (size_t i = 0; i < rows; i++)
 		{
-			for (size_t j = 0; j < scan_width; j++)
+		for (size_t j = 0; j < scan_width; j++)
 			{
 				temp++;
 				if (WINDOWMAP[i][j][3] != 0)
@@ -198,7 +198,7 @@ int main(int argc, char **argv)
 		{
 			break;
 		}
-		// rowcount++;
+		rowcount++;
 	}
 }
 
