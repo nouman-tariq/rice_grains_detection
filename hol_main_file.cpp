@@ -1,6 +1,7 @@
 #include <opencv2/highgui.hpp>
 #include <iostream>
 #include <math.h>
+#include <variant>
 using namespace std;
 using namespace cv;
 
@@ -57,7 +58,7 @@ void image_read();
 void uint2array(uint32_t ID, int numbytes, uint8_t *hdr_id);
 void update_moments(moments &M, int row, int col);
 void uint2array(uint32_t ID, int numbytes, uint8_t hdr_id);
-
+unsigned int array2uint(uint8_t *inarray, int array_size);
 
 
 int main(int argc, char **argv)
@@ -687,34 +688,12 @@ uint8_t * serialize_object(int &out_size)
 }
 void deserialize_object(uint8_t *indata, int &out_size)
 {
-	
-/*	
-	int label, num_rows, object_width, data_index, num_sections, col_start, section_size;
-    uint8_t out_image[num_rows][object_width][3] = {}; // verify initialized to 0 or not!
-    uint8_t label_arr[4], num_rows_arr[2], object_width_arr[2],num_sections_arr[2],col_start_arr[2], section_size_arr[2] ,indata[3080][3080];
-
-    for (size_t i = 0; i < 4; i++)
-    {
-        label_arr[i] = indata[i][0];
-    }
-    label = array2uint(label_arr);
-
-    for (size_t i = 0; i < 2; i++)
-    {
-        num_rows_arr[i] = indata[i+4][0];
-    }
-    num_rows = array2uint(num_rows_arr);
-
-    for (size_t i = 0; i < 2; i++)
-    {
-        object_width_arr[i] = indata[i+6][0];
-    }
-    object_width = array2uint(object_width_arr);
-
-    data_index = OBJHDRSIZE + 1;
-
-    // out_image initialization to zero.
-
+	uint32_t label = *(indata);
+	uint16_t num_rows = *(indata + 4);
+	uint16_t object_width = *(indata + 6);
+	uint16_t dataindex = OBJHDRSIZE+1;
+	uint8_t out_image[num_rows][object_width][3] = {}; 
+/*
     for (size_t row = 0; row < num_rows; row++)
     {
     
@@ -873,29 +852,27 @@ void uint2array(uint32_t num, int numbytes, uint8_t *hdr_id)
 	}
 
 }
-void array2uint(uint8_t *inarray, int array_size)
+unsigned int array2uint(uint8_t *inarray, int array_size)
 {
+	// this function is for temporary use, will be updated later on
+	unsigned int outdata;
 	switch (array_size)
 	{
 	case 1:
-		uint8_t outcast_8;
-		outcast_8 = uint8_t (num);
-		hdr_id[0] = (uint8_t) outcast_8;
+		outdata = *inarray;
+		return outdata;
 		break;
 	case 2:
-		uint16_t outcast_16;
-		outcast_16 = uint16_t (num);
-		hdr_id[0] = (uint8_t) outcast_16;
+		outdata = *inarray;
+		return outdata;
 		break;
 	case 4:
-		uint32_t outcast_32;
-		outcast_32 = uint32_t (num);
-		hdr_id[0] = (uint8_t) outcast_32;
+		outdata = *inarray;
+		return outdata;
 		break;
 	case 8:
-		uint64_t outcast_64;
-		outcast_64 = uint64_t (num);
-		hdr_id[0] = (uint8_t) outcast_64;
+		outdata = *inarray;
+		return outdata;
 		break;
 	default:
 		cout<<"Invalid data type entered- "<<endl;
