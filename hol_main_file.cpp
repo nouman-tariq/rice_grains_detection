@@ -7,8 +7,8 @@ using namespace cv;
 
 
 // GLOBALS
-uint16_t WINDOWMAP[116][309][4];
-int row_ends[100][2];
+uint16_t WINDOWMAP[116][309][4]; // currently, the size of Window map is set manually, according to the image.
+int row_ends[100][2]; // temporarily, this size is set
 uint16_t OBJHDRSIZE = 0;
 uint16_t ROWHDRSIZE = 0;
 uint16_t SECTIONHDRSIZE = 0;
@@ -51,19 +51,19 @@ double check_connected(Ellipse e, double base_value);
 void process_object(uint8_t serialized_object_data[][4000]);
 moments label_window(int burstpos, int wdwidx, int east, Mat img);
 void RGB2HSV(double R, double G, double B, double *HSV);
-uint8_t * serialize_object(int &out_size);
-void deserialize_object(uint8_t *indata, int &out_size);
+uint8_t * serialize_object();
+void deserialize_object(uint8_t *indata);
 void get_scan(Mat img, int wdw_row);
 void image_read();
 void uint2array(uint32_t ID, int numbytes, uint8_t *hdr_id);
 void update_moments(moments &M, int row, int col);
 void uint2array(uint32_t ID, int numbytes, uint8_t hdr_id);
-unsigned int array2uint(uint8_t *inarray, int array_size);
+// unsigned int array2uint(uint8_t *inarray, int array_size); // still under working, deserialize function works well, without array2uint, with a temporary fit.
 
 
 int main(int argc, char **argv)
 {
-	Mat instream;
+	Mat instream; // OpenCV libraries are used only for reading images, and to figure out their details, such as columns, rows, channels only
 	instream = imread("backside1.jpg", IMREAD_COLOR);
 
 	moments mm;
@@ -94,8 +94,7 @@ int main(int argc, char **argv)
 	get_scan(instream, wndwidx);
 
 	bool isempty = false;
-	int itr = 0; //temporary
-	int out_size = 0;
+	int itr = 0; //temporarily, for limited number of iterations inside the while loop
 
 	while (itr<300)
 	{
@@ -126,11 +125,11 @@ int main(int argc, char **argv)
 				}
 
 				mm = label_window(burstpos, wndwidx, east, instream);
-				outobject = serialize_object(out_size);
+				outobject = serialize_object();
 				ellipse[label_index] = calculate_ellipse(mm);
 				ellipse[label_index].y = (ellipse[label_index].y + rowcount) - 1;
 				label_index += 1;
-				deserialize_object(outobject, out_size);
+				deserialize_object(outobject);
 				// 			// check_connected;
 				// 			// separate_connected_grains();
 			}
@@ -140,7 +139,7 @@ int main(int argc, char **argv)
 		itr++;
 
 		int wdw_height, temp;
-		for (size_t i = 0; i < rows; i++)
+		for (size_t i = 0; i < rows; i++) // calculating wdw_height
 		{
 		for (size_t j = 0; j < scan_width; j++)
 			{
@@ -163,9 +162,9 @@ int main(int argc, char **argv)
 				break;
 			}
 			
-		}
+		} 
 
-		for (size_t k = 0; k < channels; k++)
+		for (size_t k = 0; k < channels; k++) // removing used rows
 		{
 			for (size_t j = 0; j < scan_width; j++)
 			{				
@@ -541,7 +540,7 @@ void RGB2HSV(float R, float G, float B, float *HSV)
 	HSV[1] = S;
 	HSV[2] = V;
 }
-uint8_t * serialize_object(int &out_size)
+uint8_t * serialize_object()
 {
 	uint32_t ID = 0;
 	int data_ptr = OBJHDRSIZE + ROWHDRSIZE + SECTIONHDRSIZE + 1;
@@ -558,7 +557,7 @@ uint8_t * serialize_object(int &out_size)
 		}			
 	}
 
-	out_size = (num_rows * width) + (num_rows * 20);
+	int out_size = (num_rows * width) + (num_rows * 20);
 	static uint8_t *outdata = new uint8_t[out_size*out_size];
 	for (size_t i = 0; i < (out_size*out_size); i++)
 	{
@@ -686,7 +685,7 @@ uint8_t * serialize_object(int &out_size)
 	}
 	return outdata;
 }
-void deserialize_object(uint8_t *indata, int &out_size)
+void deserialize_object(uint8_t *indata)
 {
 	uint32_t label = *(indata);
 	uint16_t num_rows = *(indata + 4);
@@ -837,7 +836,7 @@ void uint2array(uint32_t num, int numbytes, uint8_t *hdr_id)
 	}
 
 }
-unsigned int array2uint(uint8_t *inarray, int array_size)
+/* unsigned int array2uint(uint8_t *inarray, int array_size)
 {
 	// this function is for temporary use, will be updated later on
 	unsigned int outdata;
@@ -865,6 +864,7 @@ unsigned int array2uint(uint8_t *inarray, int array_size)
 	}
 
 }
+*/
 
 // g++ -g hol_main_file.cpp -o hol_main_file -std=c++11 `pkg-config --cflags --libs opencv`
 // ./testoutput
