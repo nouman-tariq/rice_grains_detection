@@ -700,17 +700,17 @@ void deserialize_object(uint8_t *indata, int &out_size)
     
         num_sections = *(indata + dataindex - 1);
         dataindex = ROWHDRSIZE + dataindex;
-        for (size_t i = 0; i < num_sections; i++)
+        for (size_t sectioncnt = 0; sectioncnt < num_sections; sectioncnt++)
         {
             colstart = *(indata + dataindex - 1);
             sectionsize = *(indata + dataindex + 2 - 1);
             dataindex = SECTIONHDRSIZE + dataindex;
             
-			for (size_t i = 0; i < sectionsize-1; i++)
+			for (size_t sectionidx = 0; sectionidx <= sectionsize-1; sectionidx++)
             {
-                out_image[row][colstart+i-1][0] = *(indata + dataindex + 0 - 1);
-                out_image[row][colstart+i-1][1] = *(indata + dataindex + 1 - 1);
-                out_image[row][colstart+i-1][2] = *(indata + dataindex + 2 - 1);
+                out_image[row][colstart+sectionidx-1][0] = *(indata + dataindex + 0 - 1);
+                out_image[row][colstart+sectionidx-1][1] = *(indata + dataindex + 1 - 1);
+                out_image[row][colstart+sectionidx-1][2] = *(indata + dataindex + 2 - 1);
                 dataindex = dataindex + 3;
             }
             
