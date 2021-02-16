@@ -691,49 +691,34 @@ void deserialize_object(uint8_t *indata, int &out_size)
 	uint32_t label = *(indata);
 	uint16_t num_rows = *(indata + 4);
 	uint16_t object_width = *(indata + 6);
-	uint16_t dataindex = OBJHDRSIZE+1;
+	uint16_t dataindex = OBJHDRSIZE + 1;
 	uint8_t out_image[num_rows][object_width][3] = {}; 
-/*
+	uint16_t num_sections = 0, colstart = 0, sectionsize = 0;
+
     for (size_t row = 0; row < num_rows; row++)
     {
     
-        for (size_t i = 0; i < 2; i++)
-        {
-            num_sections_arr[i] = indata[data_index+i][0];
-        }
-        num_sections = array2uint(num_sections_arr);
-
-        data_index = ROWHDRSIZE + data_index;
+        num_sections = *(indata + dataindex - 1);
+        dataindex = ROWHDRSIZE + dataindex;
         for (size_t i = 0; i < num_sections; i++)
         {
+            colstart = *(indata + dataindex - 1);
+            sectionsize = *(indata + dataindex + 2 - 1);
+            dataindex = SECTIONHDRSIZE + dataindex;
             
-            for (size_t i = 0; i < 2; i++)
+			for (size_t i = 0; i < sectionsize-1; i++)
             {
-                col_start_arr[i] = indata[data_index+i][0];
-            }
-            col_start = array2uint(col_start_arr);
-
-            
-            for (size_t i = 0; i < 2; i++)
-            {
-                section_size_arr[i] = indata[data_index+2+i][0];
-            }
-            section_size = array2uint(section_size_arr);
-
-            data_index = SECTIONHDRSIZE + data_index;
-            for (size_t i = 0; i < section_size-1; i++)
-            {
-                out_image[row][col_start+i][0] = indata[data_index][0];
-                out_image[row][col_start+i][1] = indata[data_index+1][0];
-                out_image[row][col_start+i][2] = indata[data_index+2][0];
-                data_index = data_index + 3;
+                out_image[row][colstart+i-1][0] = *(indata + dataindex + 0 - 1);
+                out_image[row][colstart+i-1][1] = *(indata + dataindex + 1 - 1);
+                out_image[row][colstart+i-1][2] = *(indata + dataindex + 2 - 1);
+                dataindex = dataindex + 3;
             }
             
         }
         
 
     }
-*/   
+   
 }
 void get_scan(Mat img, int wdw_row)
 {
