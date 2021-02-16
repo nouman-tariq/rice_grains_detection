@@ -128,10 +128,11 @@ int main(int argc, char **argv)
 				outobject = serialize_object();
 				ellipse[label_index] = calculate_ellipse(mm);
 				ellipse[label_index].y = (ellipse[label_index].y + rowcount) - 1;
-				label_index += 1;
 				deserialize_object(outobject); // later on, it needs to return out_image 3D array.
 				check_connected(ellipse[label_index], 0.0);
+				label_index += 1;
 				// 			// separate_connected_grains();
+
 			}
 
 			// 		// process_object();
@@ -265,7 +266,7 @@ double check_connected(Ellipse E, double base_size = 0.00)
 {
 	static int ave_cnt = 0, CMA_ave = 0;
 	int MIN_AVE_COUNT = 5;
-	int ave_value, ellipse_size;
+	float ave_value, ellipse_size;
 
 	if (!CMA_ave)
 	{
