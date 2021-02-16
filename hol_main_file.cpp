@@ -1,7 +1,6 @@
 #include <opencv2/highgui.hpp>
 #include <iostream>
 #include <math.h>
-#include <variant>
 using namespace std;
 using namespace cv;
 
@@ -57,7 +56,6 @@ void get_scan(Mat img, int wdw_row);
 void image_read();
 void uint2array(uint32_t ID, int numbytes, uint8_t *hdr_id);
 void update_moments(moments &M, int row, int col);
-void uint2array(uint32_t ID, int numbytes, uint8_t hdr_id);
 // unsigned int array2uint(uint8_t *inarray, int array_size); // still under working, deserialize function works well, without array2uint, with a temporary fit.
 
 
@@ -868,4 +866,4 @@ void uint2array(uint32_t num, int numbytes, uint8_t *hdr_id)
 */
 
 // g++ -g hol_main_file.cpp -o hol_main_file -std=c++11 `pkg-config --cflags --libs opencv`
-// ./testoutput
+// ./hol_main_file
