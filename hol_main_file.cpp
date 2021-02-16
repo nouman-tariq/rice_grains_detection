@@ -129,8 +129,8 @@ int main(int argc, char **argv)
 				ellipse[label_index] = calculate_ellipse(mm);
 				ellipse[label_index].y = (ellipse[label_index].y + rowcount) - 1;
 				label_index += 1;
-				deserialize_object(outobject);
-				// 			// check_connected;
+				deserialize_object(outobject); // later on, it needs to return out_image 3D array.
+				check_connected(ellipse[label_index], 0.0);
 				// 			// separate_connected_grains();
 			}
 
